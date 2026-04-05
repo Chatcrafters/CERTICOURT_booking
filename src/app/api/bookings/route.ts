@@ -119,25 +119,27 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single()
 
-  console.log('WhatsApp check:', {
-    hasPhone: !!profile?.phone,
-    phone: profile?.phone,
-    hasTwilioSid: !!process.env.TWILIO_ACCOUNT_SID,
-    twilioSidFirst4: process.env.TWILIO_ACCOUNT_SID?.slice(0,4),
-    hasFrom: !!process.env.TWILIO_WHATSAPP_FROM,
-  })
+  console.log('=== BOOKING CREATED ===', booking.id)
+  console.log('=== PROFILE PHONE ===', profile?.phone)
+  console.log('=== TWILIO SID ===', process.env.TWILIO_ACCOUNT_SID?.slice(0, 6))
+  console.log('=== TWILIO FROM ===', process.env.TWILIO_WHATSAPP_FROM)
 
   if (profile?.phone && process.env.TWILIO_ACCOUNT_SID) {
-    sendBookingConfirmation({
-      phone: profile.phone,
-      pin: pinCode,
-      courtName: booking.court?.display_name || booking.court?.name || '',
-      date: booking.date,
-      startTime: booking.start_time.slice(0, 5),
-      endTime: booking.end_time.slice(0, 5),
-      centerName: booking.center?.name || '',
-      totalPrice: `${totalPrice.toFixed(2)} EUR`,
-    }).catch(err => console.error('WhatsApp send failed:', err))
+    try {
+      const result = await sendBookingConfirmation({
+        phone: profile.phone,
+        pin: pinCode,
+        courtName: booking.court?.display_name || booking.court?.name || '',
+        date: booking.date,
+        startTime: booking.start_time.slice(0, 5),
+        endTime: booking.end_time.slice(0, 5),
+        centerName: booking.center?.name || '',
+        totalPrice: `${totalPrice.toFixed(2)} EUR`,
+      })
+      console.log('=== WHATSAPP SENT ===', result)
+    } catch (err) {
+      console.error('=== WHATSAPP ERROR ===', err)
+    }
   }
 
   return NextResponse.json(booking, { status: 201 })
