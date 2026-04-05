@@ -107,6 +107,15 @@ export async function POST(req: NextRequest) {
   const centerName = booking.center?.name || ''
   const pin = booking.pin_code || ''
 
+  // Insert in-app notification
+  await supabase.from('notifications').insert({
+    user_id: user.id,
+    title: 'Reserva confirmada',
+    message: `Court: ${courtName} | PIN: ${pin} | ${booking.start_time?.slice(0,5)}-${booking.end_time?.slice(0,5)}`,
+    type: 'booking_confirmed',
+    booking_id: booking.id,
+  })
+
   // Send WhatsApp confirmation
   const { data: profile } = await supabase.from('profiles')
     .select('phone, first_name')

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatEur } from '@/lib/helpers'
 import { IconRacket, IconKey, IconCreditCard, IconMap, IconCourt } from '@/components/icons'
+import NotificationBell from '@/components/NotificationBell'
 
 export default async function HomePage() {
   const supabase = createSupabaseServer()
@@ -40,11 +41,14 @@ export default async function HomePage() {
             <div className="w-2 h-2 rounded-full bg-cc-teal"></div>
             CERTICOURT
           </div>
-          <Link href="/account">
-            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold">
-              {name.slice(0,2).toUpperCase()}
-            </div>
-          </Link>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Link href="/account">
+              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold">
+                {name.slice(0,2).toUpperCase()}
+              </div>
+            </Link>
+          </div>
         </div>
         <p className="text-blue-200 text-sm">Bienvenido,</p>
         <h1 className="text-2xl font-bold">{name}</h1>
