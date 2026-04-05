@@ -119,6 +119,14 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single()
 
+  console.log('WhatsApp check:', {
+    hasPhone: !!profile?.phone,
+    phone: profile?.phone,
+    hasTwilioSid: !!process.env.TWILIO_ACCOUNT_SID,
+    twilioSidFirst4: process.env.TWILIO_ACCOUNT_SID?.slice(0,4),
+    hasFrom: !!process.env.TWILIO_WHATSAPP_FROM,
+  })
+
   if (profile?.phone && process.env.TWILIO_ACCOUNT_SID) {
     sendBookingConfirmation({
       phone: profile.phone,
