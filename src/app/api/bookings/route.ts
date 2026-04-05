@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
 
   // Send OneSignal push notification
   console.log('OneSignal key present:', !!process.env.ONESIGNAL_REST_API_KEY)
-  await fetch('https://onesignal.com/api/v1/notifications', {
+  const osResponse = await fetch('https://onesignal.com/api/v1/notifications', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${process.env.ONESIGNAL_REST_API_KEY}`,
@@ -171,7 +171,9 @@ export async function POST(req: NextRequest) {
       contents: { es: `Court: ${courtName} | PIN: ${pin} | ${booking.start_time?.slice(0,5)}`, de: `Court: ${courtName} | PIN: ${pin} | ${booking.start_time?.slice(0,5)}` },
       url: 'https://certicourt-booking.vercel.app/agenda',
     }),
-  }).catch(err => console.error('OneSignal error:', err))
+  })
+  const osResult = await osResponse.json()
+  console.log('OneSignal response:', JSON.stringify(osResult))
 
   return NextResponse.json(booking, { status: 201 })
 }
