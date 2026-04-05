@@ -167,8 +167,16 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify({
       app_id: '435c277a-d4cc-489b-86a9-92c95c8e6353',
       included_segments: ['All'],
-      headings: { es: 'CERTICOURT - Reserva confirmada', de: 'CERTICOURT - Buchung bestatigt' },
-      contents: { es: `Court: ${courtName} | PIN: ${pin} | ${booking.start_time?.slice(0,5)}`, de: `Court: ${courtName} | PIN: ${pin} | ${booking.start_time?.slice(0,5)}` },
+      headings: {
+        en: 'CERTICOURT - Booking confirmed',
+        es: 'CERTICOURT - Reserva confirmada',
+        de: 'CERTICOURT - Buchung bestatigt',
+      },
+      contents: {
+        en: `Court: ${courtName} | PIN: ${booking.pin_code} | ${booking.start_time?.slice(0,5)}`,
+        es: `Court: ${courtName} | PIN: ${booking.pin_code} | ${booking.start_time?.slice(0,5)}`,
+        de: `Court: ${courtName} | PIN: ${booking.pin_code} | ${booking.start_time?.slice(0,5)}`,
+      },
       url: 'https://certicourt-booking.vercel.app/agenda',
     }),
   })
