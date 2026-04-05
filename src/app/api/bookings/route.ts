@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServer, createSupabaseAdmin } from '@/lib/supabase-server'
+import { createSupabaseServer } from '@/lib/supabase-server'
 import { sendBookingConfirmation } from '@/lib/whatsapp'
 
 function generatePin(): string {
@@ -119,14 +119,16 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single()
 
-  if (profile?.phone && process.env.WHATSAPP_ACCESS_TOKEN) {
-    sendBookingConfirmation(profile.phone, {
-      playerName: profile.first_name || 'Jugador',
+  if (profile?.phone && process.env.TWILIO_ACCOUNT_SID) {
+    sendBookingConfirmation({
+      phone: profile.phone,
+      pin: pinCode,
       courtName: booking.court?.display_name || booking.court?.name || '',
       date: booking.date,
-      time: booking.start_time.slice(0, 5),
-      pinCode: pinCode,
+      startTime: booking.start_time.slice(0, 5),
+      endTime: booking.end_time.slice(0, 5),
       centerName: booking.center?.name || '',
+      totalPrice: `${totalPrice.toFixed(2)} EUR`,
     }).catch(err => console.error('WhatsApp send failed:', err))
   }
 

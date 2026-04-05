@@ -1,122 +1,98 @@
-const WHATSAPP_API_URL = 'https://graph.facebook.com/v19.0'
-const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID
-const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN
+const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID!
+const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN!
+const FROM_NUMBER = process.env.TWILIO_WHATSAPP_FROM!
 
-interface WhatsAppMessage {
-  to: string
-  template?: { name: string; language: string; components?: any[] }
-  text?: string
-}
-
-async function sendRequest(endpoint: string, body: object) {
-  const res = await fetch(`${WHATSAPP_API_URL}/${PHONE_NUMBER_ID}/${endpoint}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${ACCESS_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`WhatsApp API error: ${res.status} ${err}`)
-  }
-  return res.json()
-}
-
-export async function sendBookingConfirmation(phone: string, params: {
-  playerName: string
+export async function sendBookingConfirmation(params: {
+  phone: string
+  pin: string
   courtName: string
   date: string
-  time: string
-  pinCode: string
+  startTime: string
+  endTime: string
+  centerName: string
+  totalPrice: string
+}) {
+  const body = [
+    `CertiCourt - Reserva confirmada`,
+    ``,
+    `Court: ${params.courtName}`,
+    `Centro: ${params.centerName}`,
+    `Fecha: ${params.date}`,
+    `Hora: ${params.startTime} - ${params.endTime}`,
+    `Precio: ${params.totalPrice}`,
+    ``,
+    `Tu PIN de acceso: ${params.pin}`,
+    ``,
+    `Presenta este codigo en la puerta del court. Buen partido!`,
+  ].join('\n')
+
+  return sendWhatsApp(params.phone, body)
+}
+
+export async function sendBookingCancellation(params: {
+  phone: string
+  courtName: string
+  date: string
+  startTime: string
   centerName: string
 }) {
-  return sendRequest('messages', {
-    messaging_product: 'whatsapp',
-    to: phone,
-    type: 'template',
-    template: {
-      name: 'booking_confirmation',
-      language: { code: 'es' },
-      components: [
-        {
-          type: 'body',
-          parameters: [
-            { type: 'text', text: params.playerName },
-            { type: 'text', text: params.courtName },
-            { type: 'text', text: params.date },
-            { type: 'text', text: params.time },
-            { type: 'text', text: params.pinCode },
-            { type: 'text', text: params.centerName },
-          ],
-        },
-      ],
-    },
-  })
+  const body = [
+    `CertiCourt - Reserva cancelada`,
+    ``,
+    `Court: ${params.courtName}`,
+    `Centro: ${params.centerName}`,
+    `Fecha: ${params.date}`,
+    `Hora: ${params.startTime}`,
+    ``,
+    `Tu reserva ha sido cancelada. Si fue un error, reserva de nuevo en la app.`,
+  ].join('\n')
+
+  return sendWhatsApp(params.phone, body)
 }
 
-export async function sendBookingReminder(phone: string, params: {
-  playerName: string
+export async function sendBookingReminder(params: {
+  phone: string
+  pin: string
   courtName: string
-  time: string
-  pinCode: string
+  startTime: string
+  centerName: string
 }) {
-  return sendRequest('messages', {
-    messaging_product: 'whatsapp',
-    to: phone,
-    type: 'template',
-    template: {
-      name: 'booking_reminder',
-      language: { code: 'es' },
-      components: [
-        {
-          type: 'body',
-          parameters: [
-            { type: 'text', text: params.playerName },
-            { type: 'text', text: params.courtName },
-            { type: 'text', text: params.time },
-            { type: 'text', text: params.pinCode },
-          ],
-        },
-      ],
-    },
-  })
+  const body = [
+    `CertiCourt - Recordatorio`,
+    ``,
+    `Tu reserva en ${params.courtName} (${params.centerName}) empieza a las ${params.startTime}.`,
+    ``,
+    `PIN de acceso: ${params.pin}`,
+    ``,
+    `Nos vemos en la pista!`,
+  ].join('\n')
+
+  return sendWhatsApp(params.phone, body)
 }
 
-export async function sendBookingCancellation(phone: string, params: {
-  playerName: string
-  courtName: string
-  date: string
-  time: string
-}) {
-  return sendRequest('messages', {
-    messaging_product: 'whatsapp',
-    to: phone,
-    type: 'template',
-    template: {
-      name: 'booking_cancellation',
-      language: { code: 'es' },
-      components: [
-        {
-          type: 'body',
-          parameters: [
-            { type: 'text', text: params.playerName },
-            { type: 'text', text: params.courtName },
-            { type: 'text', text: params.date },
-            { type: 'text', text: params.time },
-          ],
-        },
-      ],
-    },
-  })
-}
+async function sendWhatsApp(phone: string, message: string) {
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${ACCOUNT_SID}/Messages.json`
+  const credentials = Buffer.from(`${ACCOUNT_SID}:${AUTH_TOKEN}`).toString('base64')
 
-export async function sendTextMessage(phone: string, message: string) {
-  return sendRequest('messages', {
-    messaging_product: 'whatsapp',
-    to: phone,
-    type: 'text',
-    text: { preview_url: false, body: message },
+  const formBody = new URLSearchParams({
+    From: `whatsapp:${FROM_NUMBER}`,
+    To: `whatsapp:${phone}`,
+    Body: message,
   })
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${credentials}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formBody.toString(),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Twilio error ${res.status}: ${err}`)
+  }
+
+  return res.json()
 }
