@@ -1,14 +1,14 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { IconHome, IconSearch, IconRacket, IconClock, IconUser } from './icons'
+import { IconHome, IconSearch, IconRacket, IconCalendar, IconClock } from './icons'
 
 const items = [
-  { href: '/home',     Icon: IconHome,   label: 'Inicio' },
-  { href: '/discover', Icon: IconSearch, label: 'Descubrir' },
-  { href: '/book',     Icon: IconRacket, label: 'Reservar', center: true },
-  { href: '/history',  Icon: IconClock,  label: 'Historial' },
-  { href: '/account',  Icon: IconUser,   label: 'Cuenta' },
+  { href: '/home',     Icon: IconHome,     label: 'Inicio' },
+  { href: '/discover', Icon: IconSearch,   label: 'Descubrir' },
+  { href: '/book',     Icon: IconRacket,   label: 'Reservar', center: true },
+  { href: '/agenda',   Icon: IconCalendar, label: 'Agenda' },
+  { href: '/history',  Icon: IconClock,    label: 'Historial' },
 ]
 
 export default function BottomNav() {
