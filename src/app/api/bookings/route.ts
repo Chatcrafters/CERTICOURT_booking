@@ -157,6 +157,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Send OneSignal push notification
+  console.log('OneSignal key present:', !!process.env.ONESIGNAL_REST_API_KEY)
   await fetch('https://onesignal.com/api/v1/notifications', {
     method: 'POST',
     headers: {
