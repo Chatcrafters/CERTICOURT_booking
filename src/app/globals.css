@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cc-blue: #1E54D0;
+  --cc-teal: #0AAFA0;
+}
+
+* { box-sizing: border-box; }
+
+body { font-family: 'Outfit', sans-serif; }
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+@layer components {
+  .btn-primary {
+    @apply bg-cc-blue text-white font-semibold rounded-xl px-6 py-3 w-full
+           active:scale-95 transition-transform disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply bg-gray-100 text-cc-dark font-medium rounded-xl px-6 py-3 w-full
+           active:scale-95 transition-transform;
+  }
+  .card {
+    @apply bg-white rounded-2xl border border-gray-100 p-4;
+  }
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200 font-sans text-sm
+           focus:outline-none focus:border-cc-blue bg-white;
+  }
+}
