@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { sendBookingConfirmation } from '@/lib/whatsapp'
+import { sendBookingEmail } from '@/lib/email'
 
 function generatePin(): string {
   return Math.floor(1000 + Math.random() * 9000).toString()
@@ -139,6 +140,25 @@ export async function POST(req: NextRequest) {
       console.log('=== WHATSAPP SENT ===', result)
     } catch (err) {
       console.error('=== WHATSAPP ERROR ===', err)
+    }
+  }
+
+  // Send email confirmation
+  if (user.email && process.env.RESEND_API_KEY) {
+    try {
+      await sendBookingEmail({
+        to: user.email,
+        pin: pinCode,
+        courtName: booking.court?.display_name || booking.court?.name || '',
+        date: booking.date,
+        startTime: booking.start_time.slice(0, 5),
+        endTime: booking.end_time.slice(0, 5),
+        centerName: booking.center?.name || '',
+        totalPrice,
+      })
+      console.log('=== EMAIL SENT ===', user.email)
+    } catch (err) {
+      console.error('=== EMAIL ERROR ===', err)
     }
   }
 
