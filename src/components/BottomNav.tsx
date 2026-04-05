@@ -1,13 +1,14 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { IconHome, IconSearch, IconRacket, IconCalendar, IconUser } from './icons'
 
 const items = [
-  { href: '/home',     icon: '🏠', label: 'Inicio' },
-  { href: '/discover', icon: '🔍', label: 'Descubrir' },
-  { href: '/book',     icon: '🎾', label: 'Reservar', center: true },
-  { href: '/agenda',   icon: '📅', label: 'Agenda' },
-  { href: '/account',  icon: '👤', label: 'Cuenta' },
+  { href: '/home',     Icon: IconHome,     label: 'Inicio' },
+  { href: '/discover', Icon: IconSearch,   label: 'Descubrir' },
+  { href: '/book',     Icon: IconRacket,   label: 'Reservar', center: true },
+  { href: '/agenda',   Icon: IconCalendar, label: 'Agenda' },
+  { href: '/account',  Icon: IconUser,     label: 'Cuenta' },
 ]
 
 export default function BottomNav() {
@@ -21,12 +22,12 @@ export default function BottomNav() {
             className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors
               ${active ? 'text-cc-blue' : 'text-gray-400'}`}>
             {item.center ? (
-              <div className={`w-11 h-11 rounded-full flex items-center justify-center text-xl -mt-4 shadow-lg
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center -mt-4 shadow-lg
                 ${active ? 'bg-cc-blue text-white' : 'bg-cc-blue text-white'}`}>
-                {item.icon}
+                <item.Icon size={22} />
               </div>
             ) : (
-              <span className="text-xl leading-none">{item.icon}</span>
+              <item.Icon size={22} />
             )}
             <span>{item.label}</span>
           </Link>

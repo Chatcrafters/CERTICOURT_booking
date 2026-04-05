@@ -2,6 +2,7 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatEur } from '@/lib/helpers'
+import { IconRacket, IconKey, IconCreditCard, IconMap, IconCourt } from '@/components/icons'
 
 export default async function HomePage() {
   const supabase = createSupabaseServer()
@@ -22,6 +23,13 @@ export default async function HomePage() {
 
   const name = profile?.first_name || user.email?.split('@')[0] || 'Jugador'
   const wallet = formatEur(profile?.wallet_balance || 0)
+
+  const quickActions = [
+    { href: '/book', Icon: IconRacket, label: 'Reservar', sub: 'Busca un court ahora' },
+    { href: '/agenda', Icon: IconKey, label: 'Mis llaves', sub: 'Codigos activos' },
+    { href: '/account', Icon: IconCreditCard, label: 'Bonos', sub: 'Paquetes y abonos' },
+    { href: '/discover', Icon: IconMap, label: 'Centros', sub: 'Descubrir' },
+  ]
 
   return (
     <div>
@@ -56,14 +64,9 @@ export default async function HomePage() {
 
       {/* QUICK ACTIONS */}
       <div className="grid grid-cols-2 gap-3 p-4 -mt-4">
-        {[
-          { href: '/book', icon: '🎾', label: 'Reservar', sub: 'Busca un court ahora' },
-          { href: '/agenda', icon: '🔑', label: 'Mis llaves', sub: 'Códigos activos' },
-          { href: '/account', icon: '💳', label: 'Bonos', sub: 'Paquetes y abonos' },
-          { href: '/discover', icon: '🗺️', label: 'Centros', sub: 'Descubrir' },
-        ].map(a => (
+        {quickActions.map(a => (
           <Link key={a.href} href={a.href} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-95 transition-transform">
-            <div className="text-2xl mb-2">{a.icon}</div>
+            <div className="text-cc-blue mb-2"><a.Icon size={28} /></div>
             <div className="text-sm font-bold text-cc-blue">{a.label}</div>
             <div className="text-xs text-gray-500 mt-0.5">{a.sub}</div>
           </Link>
@@ -73,7 +76,7 @@ export default async function HomePage() {
       {/* UPCOMING BOOKINGS */}
       {bookings && bookings.length > 0 && (
         <div className="px-4 mb-4">
-          <h2 className="text-base font-bold text-cc-dark mb-3">Próximas reservas</h2>
+          <h2 className="text-base font-bold text-cc-dark mb-3">Proximas reservas</h2>
           <div className="space-y-2">
             {bookings.map(b => (
               <div key={b.id} className="bg-white rounded-2xl p-4 border border-gray-100">
@@ -99,18 +102,18 @@ export default async function HomePage() {
       <div className="px-4 mb-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-bold text-cc-dark">Courts disponibles</h2>
-          <Link href="/discover" className="text-xs text-cc-blue font-semibold">Ver todos →</Link>
+          <Link href="/discover" className="text-xs text-cc-blue font-semibold">Ver todos &rarr;</Link>
         </div>
         <div className="space-y-2">
           {courts?.map(c => (
             <Link key={c.id} href={`/book?court=${c.id}`} className="bg-white rounded-2xl p-4 border border-gray-100 flex items-center gap-3 active:scale-95 transition-transform block">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cc-blue to-cc-teal flex items-center justify-center text-2xl flex-shrink-0">🏸</div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cc-blue to-cc-teal flex items-center justify-center text-white flex-shrink-0"><IconCourt size={24} /></div>
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-sm truncate">{c.display_name || c.name}</div>
                 <div className="text-xs text-gray-500">{(c as any).center?.city}</div>
                 {c.wpc_id && <div className="text-xs text-cc-blue font-mono mt-0.5">{c.wpc_id}</div>}
               </div>
-              <span className="text-gray-300 text-lg">›</span>
+              <span className="text-gray-300 text-lg">&rsaquo;</span>
             </Link>
           ))}
         </div>

@@ -2,6 +2,7 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatEur } from '@/lib/helpers'
+import { IconCalendar, IconKey, IconTicket, IconCreditCard, IconBuilding, IconGear, IconLogout, IconStar } from '@/components/icons'
 
 export default async function AccountPage() {
   const supabase = createSupabaseServer()
@@ -13,12 +14,12 @@ export default async function AccountPage() {
   const initials = name.split(' ').map((n:string) => n[0]).join('').toUpperCase().slice(0,2)
 
   const menuItems = [
-    { href: '/agenda', icon: '📅', label: 'Mis reservas' },
-    { href: '/agenda', icon: '🔑', label: 'Mis llaves / PIN activos' },
-    { href: '/account/bonos', icon: '🎫', label: 'Bonos y abonos' },
-    { href: '/account/payments', icon: '💳', label: 'Pagos y facturas' },
-    { href: '/discover', icon: '🏢', label: 'Mis centros favoritos' },
-    { href: '/operator', icon: '⚙️', label: 'Panel de Operador', highlight: true },
+    { href: '/agenda', Icon: IconCalendar, label: 'Mis reservas' },
+    { href: '/agenda', Icon: IconKey, label: 'Mis llaves / PIN activos' },
+    { href: '/account/bonos', Icon: IconTicket, label: 'Bonos y abonos' },
+    { href: '/account/payments', Icon: IconCreditCard, label: 'Pagos y facturas' },
+    { href: '/discover', Icon: IconBuilding, label: 'Mis centros favoritos' },
+    { href: '/operator', Icon: IconGear, label: 'Panel de Operador', highlight: true },
   ]
 
   return (
@@ -30,7 +31,7 @@ export default async function AccountPage() {
         <h1 className="text-xl font-bold">{name}</h1>
         <p className="text-blue-200 text-sm mt-1">@{user.email?.split('@')[0]}</p>
         <div className="inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-1.5 mt-3 text-sm font-medium">
-          ⭐ Premium · Miembro desde 2025
+          <IconStar size={16} /> Premium &middot; Miembro desde 2025
         </div>
       </div>
 
@@ -48,16 +49,16 @@ export default async function AccountPage() {
         {menuItems.map(item => (
           <Link key={item.href + item.label} href={item.href}
             className="flex items-center gap-4 px-5 py-4 bg-white active:bg-gray-50 transition-colors">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-lg">{item.icon}</div>
+            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-cc-blue"><item.Icon size={20} /></div>
             <span className={`flex-1 text-sm font-medium ${item.highlight ? 'text-cc-blue font-semibold' : 'text-cc-dark'}`}>{item.label}</span>
-            <span className="text-gray-300 text-xl">›</span>
+            <span className="text-gray-300 text-xl">&rsaquo;</span>
           </Link>
         ))}
 
         <form action="/api/auth/signout" method="POST">
           <button type="submit" className="flex items-center gap-4 px-5 py-4 w-full text-left active:bg-gray-50">
-            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-lg">🚪</div>
-            <span className="text-red-500 text-sm font-medium">Cerrar sesión</span>
+            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-500"><IconLogout size={20} /></div>
+            <span className="text-red-500 text-sm font-medium">Cerrar sesion</span>
           </button>
         </form>
       </div>
