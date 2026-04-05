@@ -19,11 +19,10 @@ export const translations = {
     sponsoring: { contracts: 'Contratos', available: 'Disponible', expiresIn: 'vence en', days: 'días', renew: 'Renovar' },
     common: { loading: 'Cargando...', error: 'Error', save: 'Guardar', cancel: 'Cancelar', back: 'Volver', next: 'Siguiente', confirm: 'Confirmar' }
   }
-} as const
+}
 
 export type Lang = keyof typeof translations
-export type T = typeof translations['de']
 
-export function t(lang: Lang): T {
+export function t(lang: Lang) {
   return translations[lang] ?? translations['es']
 }
