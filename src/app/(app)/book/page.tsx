@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { generateTimeSlots, formatEur } from '@/lib/helpers'
 import { useRouter } from 'next/navigation'
+import { IconCalendar, IconCourt, IconPin, IconCheck } from '@/components/icons'
 import { format, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -64,44 +65,39 @@ export default function BookPage() {
   async function confirmBooking() {
     if (!selectedCourt || !selectedTime || !selectedTarifa) return
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const base = isPeak(selectedTime) ? PRICES.peak : PRICES.normal
-    const disc = selectedTarifa.discount_pct || 20
-    const total = base * (1 - disc / 100)
-    const startH = parseInt(selectedTime.split(':')[0])
-    const startM = parseInt(selectedTime.split(':')[1])
-    const endM = startM + 90
-    const endH = startH + Math.floor(endM / 60)
+    const [h, m] = selectedTime.split(':').map(Number)
+    const endM = m + 90
+    const endH = h + Math.floor(endM / 60)
     const endTime = `${String(endH).padStart(2,'0')}:${String(endM % 60).padStart(2,'0')}:00`
 
-    const { data, error } = await supabase.from('bookings').insert({
-      center_id: selectedCourt.center_id,
-      court_id: selectedCourt.id,
-      profile_id: user.id,
-      pricing_rule_id: selectedTarifa.id,
-      date: dateStr,
-      start_time: selectedTime + ':00',
-      end_time: endTime,
-      duration_min: 90,
-      status: 'confirmed',
-      payment_status: 'paid',
-      payment_mode: 'online',
-      base_price: base,
-      discount_pct: disc,
-      discount_amount: base * disc / 100,
-      total_price: total,
-    }).select().single()
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        center_id: selectedCourt.center_id,
+        court_id: selectedCourt.id,
+        pricing_rule_id: selectedTarifa.id,
+        date: dateStr,
+        start_time: selectedTime + ':00',
+        end_time: endTime,
+        duration_min: 90,
+      })
+    })
 
-    if (!error && data) router.push(`/book/confirmation/${data.id}`)
-    else { alert('Error al crear reserva: ' + error?.message); setLoading(false) }
+    const data = await res.json()
+    if (res.ok && data.id) {
+      router.push(`/book/confirmation/${data.id}`)
+    } else {
+      alert('Error: ' + (data.error || 'Unknown error'))
+      setLoading(false)
+    }
   }
 
   const Step = ({ n, label }: { n: number, label: string }) => (
     <div className={`flex flex-col items-center ${step >= n ? 'text-cc-blue' : 'text-gray-300'}`}>
       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
         ${step > n ? 'bg-cc-blue text-white' : step === n ? 'bg-cc-blue text-white ring-4 ring-cc-blue/20' : 'bg-gray-200 text-gray-400'}`}>
-        {step > n ? '✓' : n}
+        {step > n ? <IconCheck size={14} /> : n}
       </div>
     </div>
   )
@@ -204,14 +200,14 @@ export default function BookPage() {
           </div>
 
           <p className="text-xs text-amber-700 bg-amber-50 p-3 rounded-xl">
-            💡 Solo puedes seleccionar tramos de 90 min. ⚡ Tarifa peak de 17:00–21:00h y fines de semana 09:00–13:00h.
+            Solo puedes seleccionar tramos de 90 min. Tarifa peak de 17:00-21:00h y fines de semana 09:00-13:00h.
           </p>
         </>}
 
         {/* STEP 2 */}
         {step === 2 && <>
-          <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
-            📅 {dateStr} · ⏱ {selectedTime} · 🏸 {selectedCourt?.display_name || selectedCourt?.name}
+          <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600 flex items-center gap-2">
+            <IconCalendar size={14} /> {dateStr} &middot; {selectedTime} &middot; <IconCourt size={14} /> {selectedCourt?.display_name || selectedCourt?.name}
           </div>
           {tarifas.filter(t => !t.is_peak).map(tarifa => (
             <button key={tarifa.id} onClick={() => setSelectedTarifa(tarifa)}
@@ -229,8 +225,8 @@ export default function BookPage() {
             </button>
           ))}
           {profile?.wallet_balance >= 0 && (
-            <div className="bg-green-50 rounded-xl p-3 text-sm text-green-700">
-              ✓ Monedero disponible: <strong>{formatEur(profile.wallet_balance)}</strong>
+            <div className="bg-green-50 rounded-xl p-3 text-sm text-green-700 flex items-center gap-1">
+              <IconCheck size={14} /> Monedero disponible: <strong>{formatEur(profile.wallet_balance)}</strong>
             </div>
           )}
           <button onClick={() => selectedTarifa && setStep(3)} className={`btn-primary ${!selectedTarifa ? 'opacity-50' : ''}`}>
@@ -243,13 +239,13 @@ export default function BookPage() {
           <div className="bg-gray-50 rounded-xl p-4 space-y-3">
             <h3 className="font-bold text-sm text-cc-dark">Información de la reserva</h3>
             {[
-              { icon: '📅', label: 'Fecha', val: dateStr },
-              { icon: '🏸', label: 'Pista', val: selectedCourt?.display_name || selectedCourt?.name },
-              { icon: '🕐', label: 'Horario', val: `${selectedTime} – ${(() => { const [h,m] = selectedTime.split(':').map(Number); const em = m+90; return `${String(h+Math.floor(em/60)).padStart(2,'0')}:${String(em%60).padStart(2,'0')}` })()} (90 min)` },
-              { icon: '📍', label: 'Centro', val: selectedCourt?.center?.name },
+              { Icon: IconCalendar, label: 'Fecha', val: dateStr },
+              { Icon: IconCourt, label: 'Pista', val: selectedCourt?.display_name || selectedCourt?.name },
+              { Icon: IconCalendar, label: 'Horario', val: `${selectedTime} - ${(() => { const [h,m] = selectedTime.split(':').map(Number); const em = m+90; return `${String(h+Math.floor(em/60)).padStart(2,'0')}:${String(em%60).padStart(2,'0')}` })()} (90 min)` },
+              { Icon: IconPin, label: 'Centro', val: selectedCourt?.center?.name },
             ].map(r => (
               <div key={r.label} className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-sm">{r.icon}</div>
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-cc-blue"><r.Icon size={16} /></div>
                 <div><div className="text-xs text-gray-500">{r.label}</div><div className="text-sm font-semibold">{r.val}</div></div>
               </div>
             ))}
@@ -258,7 +254,7 @@ export default function BookPage() {
           <div className="bg-gray-50 rounded-xl p-4">
             <h3 className="font-bold text-sm text-cc-dark mb-3">Pago</h3>
             <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between text-gray-500"><span>Precio base (90 min{isPeak(selectedTime) ? ' ⚡' : ''})</span><span>{formatEur(isPeak(selectedTime) ? PRICES.peak : PRICES.normal)}</span></div>
+              <div className="flex justify-between text-gray-500"><span>Precio base (90 min{isPeak(selectedTime) ? ' peak' : ''})</span><span>{formatEur(isPeak(selectedTime) ? PRICES.peak : PRICES.normal)}</span></div>
               {selectedTarifa?.discount_pct > 0 && <div className="flex justify-between text-green-600"><span>Descuento −{selectedTarifa.discount_pct}%</span><span>−{formatEur((isPeak(selectedTime) ? PRICES.peak : PRICES.normal) * selectedTarifa.discount_pct / 100)}</span></div>}
               <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-200">
                 <span>Total</span><span className="text-cc-blue font-mono">{formatEur(calcPrice(selectedTarifa))}</span>
