@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { formatEur, formatDateShort } from '@/lib/helpers'
-import { IconCalendar, IconPin, IconCreditCard, IconWarning } from './icons'
+import { IconCalendar, IconPin, IconCreditCard, IconWarning, IconRepeat } from './icons'
 
 const statusColors: Record<string, string> = {
   confirmed: 'bg-green-100 text-green-700',
@@ -24,20 +24,23 @@ function isCancellable(date: string, startTime: string) {
 }
 
 export default function BookingCard({ b, onCancelled }: { b: any; onCancelled?: (id: string) => void }) {
-  const [confirming, setConfirming] = useState(false)
+  const [cancelMode, setCancelMode] = useState<null | 'single' | 'series'>(null)
   const [cancelling, setCancelling] = useState(false)
   const [toast, setToast] = useState('')
 
   const canCancel = b.status === 'confirmed' && b.date >= new Date().toISOString().split('T')[0] && isCancellable(b.date, b.start_time)
   const pastDeadline = b.status === 'confirmed' && b.date >= new Date().toISOString().split('T')[0] && !isCancellable(b.date, b.start_time)
 
-  async function handleCancel() {
+  async function handleCancel(mode: 'single' | 'series') {
     setCancelling(true)
-    const res = await fetch(`/api/bookings/${b.id}/cancel`, { method: 'POST' })
+    const url = mode === 'series' && b.recurring_id
+      ? `/api/bookings/recurring/${b.recurring_id}/cancel`
+      : `/api/bookings/${b.id}/cancel`
+    const res = await fetch(url, { method: 'POST' })
     const data = await res.json()
     if (res.ok) {
-      setToast('Reserva cancelada')
-      setConfirming(false)
+      setToast(mode === 'series' ? 'Serie cancelada' : 'Reserva cancelada')
+      setCancelMode(null)
       onCancelled?.(b.id)
       setTimeout(() => setToast(''), 3000)
     } else {
@@ -50,7 +53,14 @@ export default function BookingCard({ b, onCancelled }: { b: any; onCancelled?: 
   return (
     <div className={`bg-white rounded-2xl p-4 border ${b.status === 'cancelled' ? 'border-red-200 opacity-75' : 'border-gray-100'}`}>
       <div className="flex items-center justify-between mb-2">
-        <span className="font-bold text-sm">{b.court?.display_name || b.court?.name}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-sm">{b.court?.display_name || b.court?.name}</span>
+          {b.is_recurring && (
+            <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-cc-blue bg-cc-blue-light px-1.5 py-0.5 rounded-full">
+              <IconRepeat size={10} /> Semanal
+            </span>
+          )}
+        </div>
         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${statusColors[b.status] || 'bg-gray-100'}`}>
           {statusLabels[b.status] || b.status}
         </span>
@@ -70,8 +80,8 @@ export default function BookingCard({ b, onCancelled }: { b: any; onCancelled?: 
       )}
 
       {/* Cancel section */}
-      {canCancel && !confirming && (
-        <button onClick={() => setConfirming(true)}
+      {canCancel && !cancelMode && (
+        <button onClick={() => setCancelMode('single')}
           className="mt-3 w-full text-xs font-semibold text-red-500 border border-red-200 rounded-xl py-2 hover:bg-red-50 transition-colors">
           Cancelar reserva
         </button>
@@ -83,19 +93,41 @@ export default function BookingCard({ b, onCancelled }: { b: any; onCancelled?: 
         </div>
       )}
 
-      {confirming && (
+      {cancelMode && (
         <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-3">
-          <p className="text-xs text-red-700 font-semibold mb-2">Cancelar reserva? Esta accion no se puede deshacer.</p>
-          <div className="flex gap-2">
-            <button onClick={handleCancel} disabled={cancelling}
-              className="flex-1 text-xs font-semibold text-white bg-red-500 rounded-lg py-2 disabled:opacity-50">
-              {cancelling ? 'Cancelando...' : 'Si, cancelar'}
-            </button>
-            <button onClick={() => setConfirming(false)}
-              className="flex-1 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg py-2">
-              No, mantener
-            </button>
-          </div>
+          {b.is_recurring && b.recurring_id && cancelMode === 'single' ? (
+            <>
+              <p className="text-xs text-red-700 font-semibold mb-2">Que deseas cancelar?</p>
+              <div className="flex flex-col gap-2">
+                <button onClick={() => handleCancel('single')} disabled={cancelling}
+                  className="text-xs font-semibold text-white bg-red-500 rounded-lg py-2 disabled:opacity-50">
+                  {cancelling ? 'Cancelando...' : 'Solo esta sesion'}
+                </button>
+                <button onClick={() => handleCancel('series')} disabled={cancelling}
+                  className="text-xs font-semibold text-red-600 bg-white border border-red-300 rounded-lg py-2 disabled:opacity-50">
+                  Cancelar toda la serie
+                </button>
+                <button onClick={() => setCancelMode(null)}
+                  className="text-xs font-semibold text-gray-600 py-1">
+                  No, mantener
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-red-700 font-semibold mb-2">Cancelar reserva? Esta accion no se puede deshacer.</p>
+              <div className="flex gap-2">
+                <button onClick={() => handleCancel('single')} disabled={cancelling}
+                  className="flex-1 text-xs font-semibold text-white bg-red-500 rounded-lg py-2 disabled:opacity-50">
+                  {cancelling ? 'Cancelando...' : 'Si, cancelar'}
+                </button>
+                <button onClick={() => setCancelMode(null)}
+                  className="flex-1 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg py-2">
+                  No, mantener
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 

@@ -98,3 +98,7 @@ export function IconBell({ size, ...p }: IconProps) {
 export function IconClock({ size, ...p }: IconProps) {
   return <svg {...defaults(size)} {...p}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
 }
+
+export function IconRepeat({ size, ...p }: IconProps) {
+  return <svg {...defaults(size)} {...p}><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+}

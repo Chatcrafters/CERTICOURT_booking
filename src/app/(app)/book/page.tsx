@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { generateTimeSlots, formatEur, formatDateShort, formatDate } from '@/lib/helpers'
 import { useRouter } from 'next/navigation'
-import { IconCalendar, IconCourt, IconPin, IconCheck } from '@/components/icons'
+import { IconCalendar, IconCourt, IconPin, IconCheck, IconRepeat } from '@/components/icons'
 import { format, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -23,6 +23,8 @@ export default function BookPage() {
   const [selectedTarifa, setSelectedTarifa] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [profile, setProfile] = useState<any>(null)
+  const [recurring, setRecurring] = useState(false)
+  const [recurringWeeks, setRecurringWeeks] = useState(4)
 
   const dates = Array.from({length: 7}, (_, i) => addDays(new Date(), i))
   const slots = generateTimeSlots('07:00', '23:00', 90)
@@ -81,6 +83,8 @@ export default function BookPage() {
         start_time: selectedTime + ':00',
         end_time: endTime,
         duration_min: 90,
+        is_recurring: recurring,
+        recurring_weeks: recurring ? recurringWeeks : undefined,
       })
     })
 
@@ -251,19 +255,52 @@ export default function BookPage() {
             ))}
           </div>
 
+          {/* Recurring toggle */}
+          <div className="bg-gray-50 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <IconRepeat size={16} className="text-cc-blue" />
+                <span className="text-sm font-semibold text-cc-dark">Repetir cada semana?</span>
+              </div>
+              <button onClick={() => setRecurring(!recurring)}
+                className={`w-12 h-7 rounded-full transition-colors relative ${recurring ? 'bg-cc-blue' : 'bg-gray-300'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-transform ${recurring ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+            {recurring && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-xs text-gray-500 mb-2">Durante cuantas semanas?</p>
+                <div className="flex gap-2">
+                  {[2, 3, 4, 6, 8].map(w => (
+                    <button key={w} onClick={() => setRecurringWeeks(w)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-semibold border-2 transition-colors
+                        ${recurringWeeks === w ? 'border-cc-blue bg-cc-blue-light text-cc-blue' : 'border-gray-200 bg-white text-gray-600'}`}>
+                      {w}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 bg-cc-blue-light rounded-lg p-3 text-center">
+                  <p className="text-xs text-gray-500">{recurringWeeks} sesiones &times; {formatEur(calcPrice(selectedTarifa))}</p>
+                  <p className="text-lg font-bold text-cc-blue font-mono">{formatEur(calcPrice(selectedTarifa) * recurringWeeks)}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="bg-gray-50 rounded-xl p-4">
             <h3 className="font-bold text-sm text-cc-dark mb-3">Pago</h3>
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between text-gray-500"><span>Precio base (90 min{isPeak(selectedTime) ? ' peak' : ''})</span><span>{formatEur(isPeak(selectedTime) ? PRICES.peak : PRICES.normal)}</span></div>
               {selectedTarifa?.discount_pct > 0 && <div className="flex justify-between text-green-600"><span>Descuento −{selectedTarifa.discount_pct}%</span><span>−{formatEur((isPeak(selectedTime) ? PRICES.peak : PRICES.normal) * selectedTarifa.discount_pct / 100)}</span></div>}
+              {recurring && <div className="flex justify-between text-gray-500"><span>{recurringWeeks} semanas</span><span>&times; {recurringWeeks}</span></div>}
               <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-200">
-                <span>Total</span><span className="text-cc-blue font-mono">{formatEur(calcPrice(selectedTarifa))}</span>
+                <span>Total</span><span className="text-cc-blue font-mono">{formatEur(calcPrice(selectedTarifa) * (recurring ? recurringWeeks : 1))}</span>
               </div>
             </div>
           </div>
 
           <button onClick={confirmBooking} disabled={loading} className="btn-primary">
-            {loading ? 'Procesando...' : `Pagar ${formatEur(calcPrice(selectedTarifa))} →`}
+            {loading ? 'Procesando...' : `Pagar ${formatEur(calcPrice(selectedTarifa) * (recurring ? recurringWeeks : 1))} →`}
           </button>
         </>}
       </div>
