@@ -25,7 +25,7 @@ export async function sendBookingEmail(params: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'onboarding@resend.dev',
+      from: 'reservas@certicourt.com',
       to: params.to,
       subject: 'CERTICOURT - Reserva confirmada - PIN: ' + params.pin,
       html,
