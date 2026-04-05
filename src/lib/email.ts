@@ -1,3 +1,9 @@
+function fmtDate(iso: string) {
+  const [y, m, d] = iso.split('-')
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  return `${parseInt(d)} ${months[parseInt(m) - 1]} ${y}`
+}
+
 export async function sendBookingEmail(params: {
   to: string
   courtName: string
@@ -12,7 +18,7 @@ export async function sendBookingEmail(params: {
     <h2>CERTICOURT - Reserva confirmada</h2>
     <p><strong>Court:</strong> ${params.courtName}</p>
     <p><strong>Centro:</strong> ${params.centerName}</p>
-    <p><strong>Fecha:</strong> ${params.date}</p>
+    <p><strong>Fecha:</strong> ${fmtDate(params.date)}</p>
     <p><strong>Hora:</strong> ${params.startTime} - ${params.endTime}</p>
     <p><strong>Precio:</strong> ${params.totalPrice.toFixed(2)} EUR</p>
     <h1 style="color:#1E54D0;letter-spacing:8px">${params.pin}</h1>

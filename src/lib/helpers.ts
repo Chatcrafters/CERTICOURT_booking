@@ -7,6 +7,12 @@ export function formatDate(date: string | Date, lang = 'es') {
   return format(d, 'EEEE, d MMMM yyyy', { locale })
 }
 
+export function formatDateShort(date: string | Date, lang = 'es') {
+  const d = typeof date === 'string' ? parseISO(date) : date
+  const locale = lang === 'de' ? de : es
+  return format(d, 'd MMM yyyy', { locale })
+}
+
 export function daysUntil(dateStr: string): number {
   return differenceInDays(parseISO(dateStr), new Date())
 }

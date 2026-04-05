@@ -1,7 +1,7 @@
 import { createSupabaseServer } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { formatEur } from '@/lib/helpers'
+import { formatEur, formatDateShort } from '@/lib/helpers'
 import { IconRacket, IconKey, IconCreditCard, IconMap, IconCourt } from '@/components/icons'
 import NotificationBell from '@/components/NotificationBell'
 
@@ -87,7 +87,7 @@ export default async function HomePage() {
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-bold text-sm">{b.court?.display_name || b.court?.name}</span>
                   <span className="text-xs bg-cc-blue-light text-cc-blue font-semibold px-2 py-1 rounded-full">
-                    {b.date} {b.start_time?.slice(0,5)}
+                    {formatDateShort(b.date)} {b.start_time?.slice(0,5)}
                   </span>
                 </div>
                 {b.pin_code && (

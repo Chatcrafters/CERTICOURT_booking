@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { generateTimeSlots, formatEur } from '@/lib/helpers'
+import { generateTimeSlots, formatEur, formatDateShort, formatDate } from '@/lib/helpers'
 import { useRouter } from 'next/navigation'
 import { IconCalendar, IconCourt, IconPin, IconCheck } from '@/components/icons'
 import { format, addDays } from 'date-fns'
@@ -207,7 +207,7 @@ export default function BookPage() {
         {/* STEP 2 */}
         {step === 2 && <>
           <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600 flex items-center gap-2">
-            <IconCalendar size={14} /> {dateStr} &middot; {selectedTime} &middot; <IconCourt size={14} /> {selectedCourt?.display_name || selectedCourt?.name}
+            <IconCalendar size={14} /> {formatDateShort(dateStr)} &middot; {selectedTime} &middot; <IconCourt size={14} /> {selectedCourt?.display_name || selectedCourt?.name}
           </div>
           {tarifas.filter(t => !t.is_peak).map(tarifa => (
             <button key={tarifa.id} onClick={() => setSelectedTarifa(tarifa)}
@@ -239,7 +239,7 @@ export default function BookPage() {
           <div className="bg-gray-50 rounded-xl p-4 space-y-3">
             <h3 className="font-bold text-sm text-cc-dark">Información de la reserva</h3>
             {[
-              { Icon: IconCalendar, label: 'Fecha', val: dateStr },
+              { Icon: IconCalendar, label: 'Fecha', val: formatDate(dateStr) },
               { Icon: IconCourt, label: 'Pista', val: selectedCourt?.display_name || selectedCourt?.name },
               { Icon: IconCalendar, label: 'Horario', val: `${selectedTime} - ${(() => { const [h,m] = selectedTime.split(':').map(Number); const em = m+90; return `${String(h+Math.floor(em/60)).padStart(2,'0')}:${String(em%60).padStart(2,'0')}` })()} (90 min)` },
               { Icon: IconPin, label: 'Centro', val: selectedCourt?.center?.name },

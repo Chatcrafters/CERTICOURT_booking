@@ -2,6 +2,12 @@ const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID!
 const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN!
 const FROM_NUMBER = process.env.TWILIO_WHATSAPP_FROM!
 
+function fmtDate(iso: string) {
+  const [y, m, d] = iso.split('-')
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  return `${parseInt(d)} ${months[parseInt(m) - 1]} ${y}`
+}
+
 export async function sendBookingConfirmation(params: {
   phone: string
   pin: string
@@ -17,7 +23,7 @@ export async function sendBookingConfirmation(params: {
     ``,
     `Court: ${params.courtName}`,
     `Centro: ${params.centerName}`,
-    `Fecha: ${params.date}`,
+    `Fecha: ${fmtDate(params.date)}`,
     `Hora: ${params.startTime} - ${params.endTime}`,
     `Precio: ${params.totalPrice}`,
     ``,
@@ -41,7 +47,7 @@ export async function sendBookingCancellation(params: {
     ``,
     `Court: ${params.courtName}`,
     `Centro: ${params.centerName}`,
-    `Fecha: ${params.date}`,
+    `Fecha: ${fmtDate(params.date)}`,
     `Hora: ${params.startTime}`,
     ``,
     `Tu reserva ha sido cancelada. Si fue un error, reserva de nuevo en la app.`,

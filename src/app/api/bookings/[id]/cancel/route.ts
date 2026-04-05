@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer } from '@/lib/supabase-server'
+import { formatDateShort } from '@/lib/helpers'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createSupabaseServer()
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   await supabase.from('notifications').insert({
     user_id: user.id,
     title: 'Reserva cancelada',
-    message: `${courtName} | ${booking.date} | ${booking.start_time?.slice(0, 5)}-${booking.end_time?.slice(0, 5)}`,
+    message: `${courtName} | ${formatDateShort(booking.date)} | ${booking.start_time?.slice(0, 5)}-${booking.end_time?.slice(0, 5)}`,
     type: 'booking_cancelled',
     booking_id: booking.id,
   })
@@ -67,8 +68,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           es: 'CERTICOURT - Reserva cancelada',
         },
         contents: {
-          en: `${courtName} | ${booking.date} | ${booking.start_time?.slice(0, 5)}`,
-          es: `${courtName} | ${booking.date} | ${booking.start_time?.slice(0, 5)}`,
+          en: `${courtName} | ${formatDateShort(booking.date)} | ${booking.start_time?.slice(0, 5)}`,
+          es: `${courtName} | ${formatDateShort(booking.date)} | ${booking.start_time?.slice(0, 5)}`,
         },
         url: 'https://certicourt-booking.vercel.app/agenda',
       }),

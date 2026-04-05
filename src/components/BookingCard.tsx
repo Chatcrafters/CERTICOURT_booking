@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { formatEur } from '@/lib/helpers'
+import { formatEur, formatDateShort } from '@/lib/helpers'
 import { IconCalendar, IconPin, IconCreditCard, IconWarning } from './icons'
 
 const statusColors: Record<string, string> = {
@@ -56,7 +56,7 @@ export default function BookingCard({ b, onCancelled }: { b: any; onCancelled?: 
         </span>
       </div>
       <div className="text-xs text-gray-500 space-y-1">
-        <div className="flex items-center gap-1"><IconCalendar size={12} /> {b.date} &middot; {b.start_time?.slice(0, 5)} - {b.end_time?.slice(0, 5)}</div>
+        <div className="flex items-center gap-1"><IconCalendar size={12} /> {formatDateShort(b.date)} &middot; {b.start_time?.slice(0, 5)} - {b.end_time?.slice(0, 5)}</div>
         <div className="flex items-center gap-1"><IconPin size={12} /> {b.center?.name}, {b.center?.city}</div>
         <div className="flex items-center gap-1"><IconCreditCard size={12} /> {formatEur(b.total_price)}</div>
       </div>

@@ -1,6 +1,6 @@
 import { createSupabaseServer } from '@/lib/supabase-server'
 import Link from 'next/link'
-import { formatEur } from '@/lib/helpers'
+import { formatEur, formatDate } from '@/lib/helpers'
 import { IconCheck, IconKey } from '@/components/icons'
 import CancelButton from './CancelButton'
 
@@ -44,7 +44,7 @@ export default async function ConfirmationPage({ params }: { params: { id: strin
       )}
 
       <div className="w-full bg-white rounded-2xl p-4 border border-gray-100 mb-4 text-sm space-y-2">
-        <div className="flex justify-between"><span className="text-gray-500">Fecha</span><span className="font-semibold">{booking.date}</span></div>
+        <div className="flex justify-between"><span className="text-gray-500">Fecha</span><span className="font-semibold">{formatDate(booking.date)}</span></div>
         <div className="flex justify-between"><span className="text-gray-500">Horario</span><span className="font-semibold">{booking.start_time?.slice(0,5)} - {booking.end_time?.slice(0,5)}</span></div>
         <div className="flex justify-between"><span className="text-gray-500">Centro</span><span className="font-semibold">{booking.center?.name}</span></div>
         <div className="flex justify-between"><span className="text-gray-500">Pagado</span><span className="font-semibold text-cc-blue">{formatEur(booking.total_price)}</span></div>
