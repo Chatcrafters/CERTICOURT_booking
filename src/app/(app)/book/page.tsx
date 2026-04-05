@@ -60,7 +60,7 @@ export default function BookPage() {
   function calcPrice(tarifa: any) {
     if (!tarifa) return 0
     const base = isPeak(selectedTime) ? PRICES.peak : PRICES.normal
-    const disc = tarifa.discount_pct ? tarifa.discount_pct / 100 : PRICES.premium_discount
+    const disc = (tarifa.discount_pct ?? 0) / 100
     return base * (1 - disc)
   }
 
