@@ -46,7 +46,7 @@ function groupByMonth(bookings: Booking[]) {
     map.get(key)!.push(b)
   }
 
-  for (const [key, items] of map) {
+  for (const [key, items] of Array.from(map.entries())) {
     const [y, m] = key.split('-')
     groups.push({ label: `${months[parseInt(m) - 1]} ${y}`, items })
   }
