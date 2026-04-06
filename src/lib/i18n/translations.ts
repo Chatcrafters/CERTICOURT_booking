@@ -52,8 +52,15 @@ export const translations = {
       blackouts: {
         title: 'Öffnungszeiten & Sperrzeiten',
         addBlackout: 'Sperrzeit hinzufügen',
+        blackoutTitle: 'Titel',
+        startDate: 'Startdatum',
+        endDate: 'Enddatum',
+        startTime: 'Startzeit',
+        endTime: 'Endzeit',
         allDay: 'Ganztägig',
         reason: 'Grund',
+        add: 'Hinzufügen',
+        noBlackouts: 'Keine Sperrzeiten konfiguriert',
       },
       communication: {
         title: 'Kommunikation',
@@ -116,8 +123,15 @@ export const translations = {
       blackouts: {
         title: 'Horarios y Blackouts',
         addBlackout: 'Agregar periodo bloqueado',
+        blackoutTitle: 'Titulo',
+        startDate: 'Fecha inicio',
+        endDate: 'Fecha fin',
+        startTime: 'Hora inicio',
+        endTime: 'Hora fin',
         allDay: 'Todo el dia',
         reason: 'Motivo',
+        add: 'Agregar',
+        noBlackouts: 'No hay periodos bloqueados',
       },
       communication: {
         title: 'Comunicacion',

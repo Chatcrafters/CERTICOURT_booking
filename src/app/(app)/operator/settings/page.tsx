@@ -44,6 +44,9 @@ export default function OperatorSettingsPage() {
     { min_amount: 100, bonus: 30 },
   ])
   const [openingHours, setOpeningHours] = useState<Record<string, DayHours>>({ ...defaultHours })
+  const [showBlackoutForm, setShowBlackoutForm] = useState(false)
+  const [blackouts, setBlackouts] = useState<Array<{ id: string; title: string; startDate: string; endDate: string; allDay: boolean; startTime: string; endTime: string; reason: string }>>([])
+  const [newBlackout, setNewBlackout] = useState({ title: '', startDate: '', endDate: '', allDay: true, startTime: '08:00', endTime: '22:00', reason: '' })
   const [welcomeMsg, setWelcomeMsg] = useState('')
   const [broadcastTitle, setBroadcastTitle] = useState('')
   const [broadcastBody, setBroadcastBody] = useState('')
@@ -72,6 +75,17 @@ export default function OperatorSettingsPage() {
 
   function updateDayHours(day: string, field: keyof DayHours, value: string | boolean) {
     setOpeningHours(prev => ({ ...prev, [day]: { ...prev[day], [field]: value } }))
+  }
+
+  function addBlackout() {
+    if (!newBlackout.title || !newBlackout.startDate || !newBlackout.endDate) return
+    setBlackouts(prev => [...prev, { ...newBlackout, id: crypto.randomUUID() }])
+    setNewBlackout({ title: '', startDate: '', endDate: '', allDay: true, startTime: '08:00', endTime: '22:00', reason: '' })
+    setShowBlackoutForm(false)
+  }
+
+  function removeBlackout(id: string) {
+    setBlackouts(prev => prev.filter(b => b.id !== id))
   }
 
   return (
@@ -324,19 +338,98 @@ export default function OperatorSettingsPage() {
             <div className="pt-2 border-t border-gray-100">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Blackouts</h3>
             </div>
-            <button className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-xs font-semibold text-gray-500 hover:border-cc-blue hover:text-cc-blue transition-colors">
-              + {s.blackouts.addBlackout}
-            </button>
-            <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-500 space-y-2">
-              <div className="flex items-center gap-2">
-                <input type="checkbox" className="rounded" />
-                <span>{s.blackouts.allDay}</span>
+
+            {/* Existing blackouts */}
+            {blackouts.length > 0 ? (
+              <div className="space-y-2">
+                {blackouts.map(b => (
+                  <div key={b.id} className="bg-gray-50 rounded-xl p-3 flex items-start justify-between">
+                    <div>
+                      <div className="text-sm font-semibold text-cc-dark">{b.title}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {b.startDate} &rarr; {b.endDate}
+                        {!b.allDay && ` | ${b.startTime} - ${b.endTime}`}
+                        {b.allDay && ` | ${s.blackouts.allDay}`}
+                      </div>
+                      {b.reason && <div className="text-xs text-gray-400 mt-0.5">{b.reason}</div>}
+                    </div>
+                    <button onClick={() => removeBlackout(b.id)}
+                      className="text-red-400 hover:text-red-600 text-lg leading-none flex-shrink-0 ml-2">&times;</button>
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="text-gray-400 block mb-1">{s.blackouts.reason}</label>
-                <input className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white" placeholder={s.blackouts.reason} />
+            ) : (
+              <p className="text-xs text-gray-400 text-center py-2">{s.blackouts.noBlackouts}</p>
+            )}
+
+            {/* Add blackout toggle */}
+            {!showBlackoutForm ? (
+              <button onClick={() => setShowBlackoutForm(true)}
+                className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-xs font-semibold text-gray-500 hover:border-cc-blue hover:text-cc-blue transition-colors">
+                + {s.blackouts.addBlackout}
+              </button>
+            ) : (
+              <div className="bg-gray-50 rounded-xl p-3 space-y-3">
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">{s.blackouts.blackoutTitle} *</label>
+                  <input value={newBlackout.title} onChange={e => setNewBlackout(p => ({ ...p, title: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+                    placeholder={s.blackouts.blackoutTitle} />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">{s.blackouts.startDate} *</label>
+                    <input type="date" value={newBlackout.startDate}
+                      onChange={e => setNewBlackout(p => ({ ...p, startDate: e.target.value }))}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">{s.blackouts.endDate} *</label>
+                    <input type="date" value={newBlackout.endDate}
+                      onChange={e => setNewBlackout(p => ({ ...p, endDate: e.target.value }))}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" checked={newBlackout.allDay}
+                    onChange={e => setNewBlackout(p => ({ ...p, allDay: e.target.checked }))}
+                    className="rounded" />
+                  <span className="text-xs text-gray-600">{s.blackouts.allDay}</span>
+                </div>
+                {!newBlackout.allDay && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">{s.blackouts.startTime}</label>
+                      <input type="time" value={newBlackout.startTime}
+                        onChange={e => setNewBlackout(p => ({ ...p, startTime: e.target.value }))}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">{s.blackouts.endTime}</label>
+                      <input type="time" value={newBlackout.endTime}
+                        onChange={e => setNewBlackout(p => ({ ...p, endTime: e.target.value }))}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white" />
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">{s.blackouts.reason}</label>
+                  <input value={newBlackout.reason} onChange={e => setNewBlackout(p => ({ ...p, reason: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+                    placeholder={s.blackouts.reason} />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={addBlackout}
+                    className="flex-1 bg-cc-blue text-white text-xs font-semibold py-2 rounded-lg active:scale-95 transition-transform">
+                    {s.blackouts.add}
+                  </button>
+                  <button onClick={() => setShowBlackoutForm(false)}
+                    className="flex-1 bg-white border border-gray-200 text-gray-600 text-xs font-semibold py-2 rounded-lg">
+                    {c.cancel}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
