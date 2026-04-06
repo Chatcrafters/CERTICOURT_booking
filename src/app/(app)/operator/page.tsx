@@ -2,7 +2,7 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatEur, daysUntil, formatDateShort } from '@/lib/helpers'
-import { IconClipboard, IconUsers, IconMoney, IconMegaphone, IconCourt, IconWarning } from '@/components/icons'
+import { IconClipboard, IconUsers, IconMoney, IconMegaphone, IconCourt, IconWarning, IconGear } from '@/components/icons'
 
 export default async function OperatorPage() {
   const supabase = createSupabaseServer()
@@ -33,7 +33,10 @@ export default async function OperatorPage() {
       <div className="bg-cc-dark text-white px-5 pb-5">
         <div className="flex items-center justify-between mb-4">
           <div className="font-mono text-sm font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cc-teal"></div>Panel Operador</div>
-          <span className="text-xs text-gray-400">{formatDateShort(today)}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-400">{formatDateShort(today)}</span>
+            <Link href="/operator/settings" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"><IconGear size={16} /></Link>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           {[

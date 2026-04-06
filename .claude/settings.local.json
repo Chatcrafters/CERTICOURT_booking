@@ -9,7 +9,8 @@
       "Bash(npm cache:*)",
       "Bash(npx next:*)",
       "Bash(npx -p next@14.2.5 next build)",
-      "Bash(node_modules/.bin/next build:*)"
+      "Bash(node_modules/.bin/next build:*)",
+      "Bash(find \"H:\\\\Meine Ablage\\\\Projekte\\\\CertiCourt_Booking\\\\certicourt-app/src\" -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) -exec grep -l \"translations\\\\|t\\(\" {} \\\\;)"
     ]
   }
 }
