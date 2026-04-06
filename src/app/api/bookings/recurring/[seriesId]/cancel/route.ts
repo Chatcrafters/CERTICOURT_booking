@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: { seriesId: s
     .update({ status: 'cancelled' })
     .eq('id', params.seriesId)
 
-  const courtName = cancelled?.[0]?.court?.display_name || cancelled?.[0]?.court?.name || ''
+  const courtName = (cancelled?.[0]?.court as any)?.display_name || (cancelled?.[0]?.court as any)?.name || ''
 
   // Insert notification
   await supabase.from('notifications').insert({
