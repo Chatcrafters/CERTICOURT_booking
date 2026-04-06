@@ -13,18 +13,21 @@ interface DayHours {
   enabled: boolean
   open: string
   close: string
+  pauseEnabled: boolean
+  pauseStart: string
+  pauseEnd: string
 }
 
 const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 
 const defaultHours: Record<string, DayHours> = {
-  monday:    { enabled: true,  open: '08:00', close: '22:00' },
-  tuesday:   { enabled: true,  open: '08:00', close: '22:00' },
-  wednesday: { enabled: true,  open: '08:00', close: '22:00' },
-  thursday:  { enabled: true,  open: '08:00', close: '22:00' },
-  friday:    { enabled: true,  open: '08:00', close: '22:00' },
-  saturday:  { enabled: true,  open: '09:00', close: '22:00' },
-  sunday:    { enabled: false, open: '09:00', close: '22:00' },
+  monday:    { enabled: true,  open: '08:00', close: '22:00', pauseEnabled: false, pauseStart: '14:00', pauseEnd: '17:00' },
+  tuesday:   { enabled: true,  open: '08:00', close: '22:00', pauseEnabled: false, pauseStart: '14:00', pauseEnd: '17:00' },
+  wednesday: { enabled: true,  open: '08:00', close: '22:00', pauseEnabled: false, pauseStart: '14:00', pauseEnd: '17:00' },
+  thursday:  { enabled: true,  open: '08:00', close: '22:00', pauseEnabled: false, pauseStart: '14:00', pauseEnd: '17:00' },
+  friday:    { enabled: true,  open: '08:00', close: '22:00', pauseEnabled: false, pauseStart: '14:00', pauseEnd: '17:00' },
+  saturday:  { enabled: true,  open: '09:00', close: '22:00', pauseEnabled: false, pauseStart: '14:00', pauseEnd: '17:00' },
+  sunday:    { enabled: false, open: '09:00', close: '22:00', pauseEnabled: false, pauseStart: '14:00', pauseEnd: '17:00' },
 }
 
 export default function OperatorSettingsPage() {
@@ -44,6 +47,8 @@ export default function OperatorSettingsPage() {
     { min_amount: 100, bonus: 30 },
   ])
   const [openingHours, setOpeningHours] = useState<Record<string, DayHours>>({ ...defaultHours })
+  const [globalPauseStart, setGlobalPauseStart] = useState('14:00')
+  const [globalPauseEnd, setGlobalPauseEnd] = useState('17:00')
   const [showBlackoutForm, setShowBlackoutForm] = useState(false)
   const [blackouts, setBlackouts] = useState<Array<{ id: string; title: string; startDate: string; endDate: string; allDay: boolean; startTime: string; endTime: string; reason: string }>>([])
   const [newBlackout, setNewBlackout] = useState({ title: '', startDate: '', endDate: '', allDay: true, startTime: '08:00', endTime: '22:00', reason: '' })
@@ -75,6 +80,18 @@ export default function OperatorSettingsPage() {
 
   function updateDayHours(day: string, field: keyof DayHours, value: string | boolean) {
     setOpeningHours(prev => ({ ...prev, [day]: { ...prev[day], [field]: value } }))
+  }
+
+  function applyGlobalPause() {
+    setOpeningHours(prev => {
+      const updated = { ...prev }
+      for (const day of DAY_KEYS) {
+        if (updated[day].enabled) {
+          updated[day] = { ...updated[day], pauseEnabled: true, pauseStart: globalPauseStart, pauseEnd: globalPauseEnd }
+        }
+      }
+      return updated
+    })
   }
 
   function addBlackout() {
@@ -303,30 +320,64 @@ export default function OperatorSettingsPage() {
             {/* Opening Hours */}
             <div>
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{s.hours.title}</h3>
+
+              {/* Global pause configurator */}
+              <div className="bg-cc-blue-light rounded-xl p-3 mb-3 space-y-2">
+                <div className="text-xs font-semibold text-cc-blue">{s.hours.dailyPause}</div>
+                <div className="flex items-center gap-2">
+                  <input type="time" value={globalPauseStart} onChange={e => setGlobalPauseStart(e.target.value)}
+                    className="border border-blue-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
+                  <span className="text-gray-400">-</span>
+                  <input type="time" value={globalPauseEnd} onChange={e => setGlobalPauseEnd(e.target.value)}
+                    className="border border-blue-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
+                  <button onClick={applyGlobalPause}
+                    className="bg-cc-blue text-white text-xs font-semibold px-3 py-1.5 rounded-lg active:scale-95 transition-transform whitespace-nowrap">
+                    {s.hours.applyToAll}
+                  </button>
+                </div>
+                <p className="text-xs text-blue-500">{s.hours.applyInfo}</p>
+              </div>
+
               <div className="space-y-1.5">
                 {DAY_KEYS.map((day, i) => {
                   const dh = openingHours[day]
                   return (
-                    <div key={day} className={`flex items-center gap-2 rounded-lg p-2 ${dh.enabled ? 'bg-white' : 'bg-gray-50'}`}>
-                      <button onClick={() => updateDayHours(day, 'enabled', !dh.enabled)}
-                        className={`w-10 h-6 rounded-full transition-colors relative flex-shrink-0 ${dh.enabled ? 'bg-cc-blue' : 'bg-gray-300'}`}>
-                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${dh.enabled ? 'translate-x-5' : 'translate-x-1'}`} />
-                      </button>
-                      <span className={`text-sm w-20 flex-shrink-0 ${dh.enabled ? 'text-cc-dark font-medium' : 'text-gray-400'}`}>
-                        {s.hours.days[i]}
-                      </span>
-                      {dh.enabled ? (
-                        <div className="flex items-center gap-1 flex-1">
-                          <input type="time" value={dh.open}
-                            onChange={e => updateDayHours(day, 'open', e.target.value)}
-                            className="border border-gray-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
+                    <div key={day} className={`rounded-lg p-2 ${dh.enabled ? 'bg-white' : 'bg-gray-50'}`}>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => updateDayHours(day, 'enabled', !dh.enabled)}
+                          className={`w-10 h-6 rounded-full transition-colors relative flex-shrink-0 ${dh.enabled ? 'bg-cc-blue' : 'bg-gray-300'}`}>
+                          <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${dh.enabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                        </button>
+                        <span className={`text-sm w-20 flex-shrink-0 ${dh.enabled ? 'text-cc-dark font-medium' : 'text-gray-400'}`}>
+                          {s.hours.days[i]}
+                        </span>
+                        {dh.enabled ? (
+                          <div className="flex items-center gap-1 flex-1">
+                            <input type="time" value={dh.open}
+                              onChange={e => updateDayHours(day, 'open', e.target.value)}
+                              className="border border-gray-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
+                            <span className="text-gray-300">-</span>
+                            <input type="time" value={dh.close}
+                              onChange={e => updateDayHours(day, 'close', e.target.value)}
+                              className="border border-gray-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">{s.hours.closed}</span>
+                        )}
+                      </div>
+                      {dh.enabled && dh.pauseEnabled && (
+                        <div className="flex items-center gap-2 ml-12 mt-1">
+                          <span className="text-xs text-amber-600 font-medium">{s.hours.pause}:</span>
+                          <input type="time" value={dh.pauseStart}
+                            onChange={e => updateDayHours(day, 'pauseStart', e.target.value)}
+                            className="border border-amber-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
                           <span className="text-gray-300">-</span>
-                          <input type="time" value={dh.close}
-                            onChange={e => updateDayHours(day, 'close', e.target.value)}
-                            className="border border-gray-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
+                          <input type="time" value={dh.pauseEnd}
+                            onChange={e => updateDayHours(day, 'pauseEnd', e.target.value)}
+                            className="border border-amber-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
+                          <button onClick={() => updateDayHours(day, 'pauseEnabled', false)}
+                            className="text-red-400 hover:text-red-600 text-sm leading-none">&times;</button>
                         </div>
-                      ) : (
-                        <span className="text-xs text-gray-400">{s.hours.closed}</span>
                       )}
                     </div>
                   )

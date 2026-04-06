@@ -47,6 +47,10 @@ export const translations = {
         closed: 'Geschlossen',
         opening: 'Öffnung',
         closing: 'Schließung',
+        pause: 'Pause',
+        dailyPause: 'Tägliche Pause',
+        applyToAll: 'Auf alle anwenden',
+        applyInfo: 'Einzelne Tage können danach angepasst werden',
         days: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'],
       },
       blackouts: {
@@ -118,6 +122,10 @@ export const translations = {
         closed: 'Cerrado',
         opening: 'Apertura',
         closing: 'Cierre',
+        pause: 'Pausa',
+        dailyPause: 'Pausa diaria para todos los dias',
+        applyToAll: 'Aplicar a todos',
+        applyInfo: 'Puedes ajustar dias individuales despues',
         days: ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'],
       },
       blackouts: {
