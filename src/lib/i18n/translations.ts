@@ -41,6 +41,14 @@ export const translations = {
         preview: 'Bei {amount} EUR Aufladung erhältst du {total} EUR',
         info: 'Boni werden automatisch beim Aufladen gutgeschrieben',
       },
+      hours: {
+        title: 'Öffnungszeiten',
+        open: 'Geöffnet',
+        closed: 'Geschlossen',
+        opening: 'Öffnung',
+        closing: 'Schließung',
+        days: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'],
+      },
       blackouts: {
         title: 'Öffnungszeiten & Sperrzeiten',
         addBlackout: 'Sperrzeit hinzufügen',
@@ -96,6 +104,14 @@ export const translations = {
         addTier: 'Anadir nivel',
         preview: 'Al cargar {amount} EUR recibes {total} EUR',
         info: 'Los bonos se aplican automaticamente al recargar el wallet',
+      },
+      hours: {
+        title: 'Horarios de apertura',
+        open: 'Abierto',
+        closed: 'Cerrado',
+        opening: 'Apertura',
+        closing: 'Cierre',
+        days: ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'],
       },
       blackouts: {
         title: 'Horarios y Blackouts',

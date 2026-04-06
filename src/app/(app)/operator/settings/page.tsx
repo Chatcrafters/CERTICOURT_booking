@@ -9,6 +9,24 @@ interface BonusTier {
   bonus: number
 }
 
+interface DayHours {
+  enabled: boolean
+  open: string
+  close: string
+}
+
+const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
+
+const defaultHours: Record<string, DayHours> = {
+  monday:    { enabled: true,  open: '08:00', close: '22:00' },
+  tuesday:   { enabled: true,  open: '08:00', close: '22:00' },
+  wednesday: { enabled: true,  open: '08:00', close: '22:00' },
+  thursday:  { enabled: true,  open: '08:00', close: '22:00' },
+  friday:    { enabled: true,  open: '08:00', close: '22:00' },
+  saturday:  { enabled: true,  open: '09:00', close: '22:00' },
+  sunday:    { enabled: false, open: '09:00', close: '22:00' },
+}
+
 export default function OperatorSettingsPage() {
   const [lang, setLang] = useState<Lang>('es')
   const [saved, setSaved] = useState(false)
@@ -25,6 +43,7 @@ export default function OperatorSettingsPage() {
     { min_amount: 50, bonus: 10 },
     { min_amount: 100, bonus: 30 },
   ])
+  const [openingHours, setOpeningHours] = useState<Record<string, DayHours>>({ ...defaultHours })
   const [welcomeMsg, setWelcomeMsg] = useState('')
   const [broadcastTitle, setBroadcastTitle] = useState('')
   const [broadcastBody, setBroadcastBody] = useState('')
@@ -49,6 +68,10 @@ export default function OperatorSettingsPage() {
 
   function removeTier(index: number) {
     setBonusTiers(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function updateDayHours(day: string, field: keyof DayHours, value: string | boolean) {
+    setOpeningHours(prev => ({ ...prev, [day]: { ...prev[day], [field]: value } }))
   }
 
   return (
@@ -262,7 +285,45 @@ export default function OperatorSettingsPage() {
             <IconClock size={16} className="text-cc-blue" />
             <h2 className="text-sm font-bold text-cc-dark">{s.blackouts.title}</h2>
           </div>
-          <div className="p-4 space-y-3">
+          <div className="p-4 space-y-4">
+            {/* Opening Hours */}
+            <div>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{s.hours.title}</h3>
+              <div className="space-y-1.5">
+                {DAY_KEYS.map((day, i) => {
+                  const dh = openingHours[day]
+                  return (
+                    <div key={day} className={`flex items-center gap-2 rounded-lg p-2 ${dh.enabled ? 'bg-white' : 'bg-gray-50'}`}>
+                      <button onClick={() => updateDayHours(day, 'enabled', !dh.enabled)}
+                        className={`w-10 h-6 rounded-full transition-colors relative flex-shrink-0 ${dh.enabled ? 'bg-cc-blue' : 'bg-gray-300'}`}>
+                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${dh.enabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                      </button>
+                      <span className={`text-sm w-20 flex-shrink-0 ${dh.enabled ? 'text-cc-dark font-medium' : 'text-gray-400'}`}>
+                        {s.hours.days[i]}
+                      </span>
+                      {dh.enabled ? (
+                        <div className="flex items-center gap-1 flex-1">
+                          <input type="time" value={dh.open}
+                            onChange={e => updateDayHours(day, 'open', e.target.value)}
+                            className="border border-gray-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
+                          <span className="text-gray-300">-</span>
+                          <input type="time" value={dh.close}
+                            onChange={e => updateDayHours(day, 'close', e.target.value)}
+                            className="border border-gray-200 rounded-md px-2 py-1 text-xs bg-white w-24" />
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">{s.hours.closed}</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Blackout Periods */}
+            <div className="pt-2 border-t border-gray-100">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Blackouts</h3>
+            </div>
             <button className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-xs font-semibold text-gray-500 hover:border-cc-blue hover:text-cc-blue transition-colors">
               + {s.blackouts.addBlackout}
             </button>
