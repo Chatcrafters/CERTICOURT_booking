@@ -6,7 +6,10 @@
       "Bash(npm install:*)",
       "Bash(npm ls:*)",
       "Bash(node -e \"require\\('resend'\\)\")",
-      "Bash(npm cache:*)"
+      "Bash(npm cache:*)",
+      "Bash(npx next:*)",
+      "Bash(npx -p next@14.2.5 next build)",
+      "Bash(node_modules/.bin/next build:*)"
     ]
   }
 }

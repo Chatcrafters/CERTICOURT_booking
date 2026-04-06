@@ -118,9 +118,9 @@ export async function POST(req: NextRequest) {
     start_time,
     end_time,
     duration_min: duration_min || 90,
-    status: 'confirmed' as const,
-    payment_status: 'pending' as const,
-    payment_mode: 'on_site' as const,
+    status: 'confirmed',
+    payment_status: 'pending',
+    payment_mode: 'on_site',
     base_price: basePrice,
     discount_pct: discountPct,
     discount_amount: discountAmount,
@@ -134,7 +134,9 @@ export async function POST(req: NextRequest) {
     .insert(bookingRows)
     .select('*, court:courts(name, display_name), center:centers(name, city)')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error || !bookings || bookings.length === 0) {
+    return NextResponse.json({ error: error?.message || 'Failed to create booking' }, { status: 500 })
+  }
 
   const booking = bookings[0]
   const courtName = booking.court?.display_name || booking.court?.name || ''
