@@ -7,7 +7,7 @@ export const translations = {
     auth: { login: 'Anmelden', register: 'Registrieren', email: 'E-Mail', password: 'Passwort', name: 'Name' },
     operator: { dashboard: 'Dashboard', courts: 'Courts', bookings: 'Buchungen', members: 'Mitglieder', sponsoring: 'Sponsoring', revenue: 'Einnahmen', occupancy: 'Auslastung', today: 'Heute' },
     sponsoring: { contracts: 'Verträge', available: 'Verfügbar', expiresIn: 'läuft ab in', days: 'Tagen', renew: 'Verlängern' },
-    common: { loading: 'Laden...', error: 'Fehler', save: 'Speichern', saved: 'Gespeichert', cancel: 'Abbrechen', back: 'Zurück', next: 'Weiter', confirm: 'Bestätigen', send: 'Senden' },
+    common: { loading: 'Laden...', error: 'Fehler', save: 'Speichern', saved: 'Gespeichert', cancel: 'Abbrechen', back: 'Zurück', next: 'Weiter', confirm: 'Bestätigen', send: 'Senden', delete: 'Löschen' },
     settings: {
       title: 'Einstellungen',
       payments: {
@@ -29,16 +29,17 @@ export const translations = {
         maxDuration: 'Max. Buchungsdauer',
         allowRecurring: 'Wiederkehrende Buchungen erlauben',
         immediate: 'Sofort',
+        noCancel: 'Stornierung nicht erlaubt',
+        noCancelInfo: 'Bestätigte Buchungen können nicht storniert werden',
       },
-      memberships: {
-        title: 'Mitgliedschaften',
-        enable: 'Mitgliedschaften aktivieren',
-        basicPlan: 'Basic Plan',
-        proPlan: 'Pro Plan',
-        priceMonth: 'Preis/Monat',
-        discount: 'Rabatt',
-        freeHours: 'Freistunden/Monat',
-        bookingPriority: 'Buchungspriorität',
+      wallet: {
+        title: 'Wallet & Boni',
+        bonusEnabled: 'Aufladeboni aktivieren',
+        minAmount: 'Mindestbetrag',
+        bonus: 'Bonus',
+        addTier: 'Stufe hinzufügen',
+        preview: 'Bei {amount} EUR Aufladung erhältst du {total} EUR',
+        info: 'Boni werden automatisch beim Aufladen gutgeschrieben',
       },
       blackouts: {
         title: 'Öffnungszeiten & Sperrzeiten',
@@ -62,7 +63,7 @@ export const translations = {
     auth: { login: 'Iniciar sesión', register: 'Registrarse', email: 'Correo electrónico', password: 'Contraseña', name: 'Nombre' },
     operator: { dashboard: 'Panel', courts: 'Pistas', bookings: 'Reservas', members: 'Miembros', sponsoring: 'Patrocinios', revenue: 'Ingresos', occupancy: 'Ocupación', today: 'Hoy' },
     sponsoring: { contracts: 'Contratos', available: 'Disponible', expiresIn: 'vence en', days: 'días', renew: 'Renovar' },
-    common: { loading: 'Cargando...', error: 'Error', save: 'Guardar', saved: 'Guardado', cancel: 'Cancelar', back: 'Volver', next: 'Siguiente', confirm: 'Confirmar', send: 'Enviar' },
+    common: { loading: 'Cargando...', error: 'Error', save: 'Guardar', saved: 'Guardado', cancel: 'Cancelar', back: 'Volver', next: 'Siguiente', confirm: 'Confirmar', send: 'Enviar', delete: 'Eliminar' },
     settings: {
       title: 'Ajustes',
       payments: {
@@ -84,16 +85,17 @@ export const translations = {
         maxDuration: 'Duracion maxima',
         allowRecurring: 'Permitir reservas recurrentes',
         immediate: 'Inmediato',
+        noCancel: 'No permitir cancelacion',
+        noCancelInfo: 'Las reservas no podran cancelarse una vez confirmadas',
       },
-      memberships: {
-        title: 'Membresias',
-        enable: 'Activar membresias',
-        basicPlan: 'Plan Basico',
-        proPlan: 'Plan Pro',
-        priceMonth: 'Precio/mes',
-        discount: 'Descuento',
-        freeHours: 'Horas gratuitas/mes',
-        bookingPriority: 'Prioridad de reserva',
+      wallet: {
+        title: 'Wallet & Bonos',
+        bonusEnabled: 'Activar bonos de recarga',
+        minAmount: 'Importe minimo',
+        bonus: 'Bonus',
+        addTier: 'Anadir nivel',
+        preview: 'Al cargar {amount} EUR recibes {total} EUR',
+        info: 'Los bonos se aplican automaticamente al recargar el wallet',
       },
       blackouts: {
         title: 'Horarios y Blackouts',

@@ -2,7 +2,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { t, Lang } from '@/lib/i18n/translations'
-import { IconGear, IconMoney, IconCalendar, IconUsers, IconClock, IconMegaphone, IconCheck } from '@/components/icons'
+import { IconMoney, IconCalendar, IconClock, IconMegaphone, IconCheck, IconCreditCard, IconWarning } from '@/components/icons'
+
+interface BonusTier {
+  min_amount: number
+  bonus: number
+}
 
 export default function OperatorSettingsPage() {
   const [lang, setLang] = useState<Lang>('es')
@@ -15,7 +20,11 @@ export default function OperatorSettingsPage() {
   const [maxPerWeek, setMaxPerWeek] = useState('10')
   const [maxDuration, setMaxDuration] = useState('90')
   const [allowRecurring, setAllowRecurring] = useState(true)
-  const [membershipsEnabled, setMembershipsEnabled] = useState(true)
+  const [walletBonusEnabled, setWalletBonusEnabled] = useState(false)
+  const [bonusTiers, setBonusTiers] = useState<BonusTier[]>([
+    { min_amount: 50, bonus: 10 },
+    { min_amount: 100, bonus: 30 },
+  ])
   const [welcomeMsg, setWelcomeMsg] = useState('')
   const [broadcastTitle, setBroadcastTitle] = useState('')
   const [broadcastBody, setBroadcastBody] = useState('')
@@ -26,6 +35,20 @@ export default function OperatorSettingsPage() {
   function handleSave() {
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  function updateTier(index: number, field: keyof BonusTier, value: number) {
+    setBonusTiers(prev => prev.map((tier, i) => i === index ? { ...tier, [field]: value } : tier))
+  }
+
+  function addTier() {
+    if (bonusTiers.length >= 4) return
+    const lastAmount = bonusTiers.length > 0 ? bonusTiers[bonusTiers.length - 1].min_amount : 0
+    setBonusTiers(prev => [...prev, { min_amount: lastAmount + 50, bonus: 10 }])
+  }
+
+  function removeTier(index: number) {
+    setBonusTiers(prev => prev.filter((_, i) => i !== index))
   }
 
   return (
@@ -113,15 +136,34 @@ export default function OperatorSettingsPage() {
                 <option value="24">24h</option>
               </select>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">{s.bookingRules.freeCancellation}</span>
-              <select value={freeCancelHours} onChange={e => setFreeCancelHours(e.target.value)}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white">
-                <option value="1">1h</option>
-                <option value="2">2h</option>
-                <option value="4">4h</option>
-                <option value="24">24h</option>
-              </select>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-700">{s.bookingRules.freeCancellation}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { value: '0', label: s.bookingRules.noCancel },
+                  { value: '1', label: '1h' },
+                  { value: '2', label: '2h' },
+                  { value: '6', label: '6h' },
+                  { value: '24', label: '24h' },
+                  { value: '48', label: '48h' },
+                ].map(opt => (
+                  <button key={opt.value} onClick={() => setFreeCancelHours(opt.value)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-colors
+                      ${freeCancelHours === opt.value
+                        ? opt.value === '0' ? 'border-red-400 bg-red-50 text-red-600' : 'border-cc-blue bg-cc-blue-light text-cc-blue'
+                        : 'border-gray-200 bg-white text-gray-600'}`}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {freeCancelHours === '0' && (
+                <div className="mt-2 flex items-start gap-1.5 text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+                  <IconWarning size={14} className="flex-shrink-0 mt-0.5" />
+                  <span>{s.bookingRules.noCancelInfo}</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-700">{s.bookingRules.maxPerWeek}</span>
@@ -153,44 +195,62 @@ export default function OperatorSettingsPage() {
           </div>
         </div>
 
-        {/* MEMBERSHIPS */}
+        {/* WALLET & BONOS */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-50 flex items-center gap-2">
-            <IconUsers size={16} className="text-cc-blue" />
-            <h2 className="text-sm font-bold text-cc-dark">{s.memberships.title}</h2>
+            <IconCreditCard size={16} className="text-cc-blue" />
+            <h2 className="text-sm font-bold text-cc-dark">{s.wallet.title}</h2>
           </div>
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">{s.memberships.enable}</span>
-              <button onClick={() => setMembershipsEnabled(!membershipsEnabled)}
-                className={`w-12 h-7 rounded-full transition-colors relative ${membershipsEnabled ? 'bg-cc-blue' : 'bg-gray-300'}`}>
-                <div className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-transform ${membershipsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+              <span className="text-sm text-gray-700">{s.wallet.bonusEnabled}</span>
+              <button onClick={() => setWalletBonusEnabled(!walletBonusEnabled)}
+                className={`w-12 h-7 rounded-full transition-colors relative ${walletBonusEnabled ? 'bg-cc-blue' : 'bg-gray-300'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full absolute top-1 transition-transform ${walletBonusEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
-            {membershipsEnabled && (
+            {walletBonusEnabled && (
               <div className="space-y-3">
-                {[
-                  { name: s.memberships.basicPlan, price: '29,99', discount: '10%', hours: '5' },
-                  { name: s.memberships.proPlan, price: '59,99', discount: '20%', hours: '15' },
-                ].map(plan => (
-                  <div key={plan.name} className="bg-gray-50 rounded-xl p-3">
-                    <div className="font-semibold text-sm text-cc-dark mb-2">{plan.name}</div>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div>
-                        <span className="text-gray-400 block">{s.memberships.priceMonth}</span>
-                        <span className="font-semibold">{plan.price} EUR</span>
+                {bonusTiers.map((tier, i) => (
+                  <div key={i} className="bg-gray-50 rounded-xl p-3 space-y-2">
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-400 block mb-1">{s.wallet.minAmount}</label>
+                        <div className="relative">
+                          <input type="number" value={tier.min_amount}
+                            onChange={e => updateTier(i, 'min_amount', Number(e.target.value))}
+                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white pr-8" />
+                          <span className="absolute right-3 top-1.5 text-sm text-gray-400">EUR</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-gray-400 block">{s.memberships.discount}</span>
-                        <span className="font-semibold">{plan.discount}</span>
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-400 block mb-1">{s.wallet.bonus}</label>
+                        <div className="relative">
+                          <input type="number" value={tier.bonus}
+                            onChange={e => updateTier(i, 'bonus', Number(e.target.value))}
+                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white pr-8" />
+                          <span className="absolute right-3 top-1.5 text-sm text-gray-400">EUR</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-gray-400 block">{s.memberships.freeHours}</span>
-                        <span className="font-semibold">{plan.hours}h</span>
-                      </div>
+                      <button onClick={() => removeTier(i)}
+                        className="self-end mb-0.5 w-8 h-8 rounded-lg bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-100 transition-colors text-lg">
+                        &times;
+                      </button>
+                    </div>
+                    <div className="text-xs text-cc-blue bg-cc-blue-light rounded-lg px-2 py-1.5 text-center font-medium">
+                      {s.wallet.preview
+                        .replace('{amount}', String(tier.min_amount))
+                        .replace('{total}', String(tier.min_amount + tier.bonus))}
                     </div>
                   </div>
                 ))}
+                {bonusTiers.length < 4 && (
+                  <button onClick={addTier}
+                    className="w-full py-2 rounded-xl border-2 border-dashed border-gray-300 text-xs font-semibold text-gray-500 hover:border-cc-blue hover:text-cc-blue transition-colors">
+                    + {s.wallet.addTier}
+                  </button>
+                )}
+                <p className="text-xs text-gray-400 bg-gray-50 p-2 rounded-lg">{s.wallet.info}</p>
               </div>
             )}
           </div>
