@@ -13,7 +13,7 @@ export default async function AccountPage() {
   const name = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || user.email || 'Jugador'
   const initials = name.split(' ').map((n:string) => n[0]).join('').toUpperCase().slice(0,2)
 
-  const menuItems = [
+  const menuItems: Array<{ href: string; Icon: any; label: string; badge?: string; highlight?: boolean }> = [
     { href: '/account/wallet', Icon: IconWallet, label: 'Mi Wallet', badge: formatEur(profile?.wallet_balance || 0) },
     { href: '/agenda', Icon: IconCalendar, label: 'Mis reservas' },
     { href: '/agenda', Icon: IconKey, label: 'Mis llaves / PIN activos' },
