@@ -2,7 +2,7 @@ import { createSupabaseServer } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatEur } from '@/lib/helpers'
-import { IconCalendar, IconKey, IconTicket, IconCreditCard, IconBuilding, IconGear, IconLogout, IconStar } from '@/components/icons'
+import { IconCalendar, IconKey, IconTicket, IconCreditCard, IconBuilding, IconGear, IconLogout, IconStar, IconWallet } from '@/components/icons'
 
 export default async function AccountPage() {
   const supabase = createSupabaseServer()
@@ -14,6 +14,7 @@ export default async function AccountPage() {
   const initials = name.split(' ').map((n:string) => n[0]).join('').toUpperCase().slice(0,2)
 
   const menuItems = [
+    { href: '/account/wallet', Icon: IconWallet, label: 'Mi Wallet', badge: formatEur(profile?.wallet_balance || 0) },
     { href: '/agenda', Icon: IconCalendar, label: 'Mis reservas' },
     { href: '/agenda', Icon: IconKey, label: 'Mis llaves / PIN activos' },
     { href: '/account/bonos', Icon: IconTicket, label: 'Bonos y abonos' },
@@ -36,14 +37,17 @@ export default async function AccountPage() {
       </div>
 
       {/* WALLET */}
-      <div className="mx-4 -mt-5 bg-cc-blue rounded-2xl p-5 text-white shadow-lg">
-        <p className="text-xs uppercase tracking-wide opacity-75">Monedero</p>
+      <Link href="/account/wallet" className="block mx-4 -mt-5 bg-cc-blue rounded-2xl p-5 text-white shadow-lg active:scale-[0.98] transition-transform">
+        <div className="flex items-center gap-2">
+          <IconWallet size={16} />
+          <span className="text-xs uppercase tracking-wide opacity-75">Wallet</span>
+        </div>
         <p className="text-3xl font-bold font-mono mt-1">{formatEur(profile?.wallet_balance || 0)}</p>
         <div className="flex gap-2 mt-3">
-          <button className="flex-1 py-2 rounded-xl border-2 border-white/30 bg-white/10 text-sm font-semibold active:scale-95 transition-transform">+ Recargar</button>
-          <button className="flex-1 py-2 rounded-xl border-2 border-white/30 bg-white/10 text-sm font-semibold active:scale-95 transition-transform">Historial</button>
+          <span className="flex-1 py-2 rounded-xl border-2 border-white/30 bg-white/10 text-sm font-semibold text-center">Recargar</span>
+          <span className="flex-1 py-2 rounded-xl border-2 border-white/30 bg-white/10 text-sm font-semibold text-center">Movimientos</span>
         </div>
-      </div>
+      </Link>
 
       <div className="mt-5 divide-y divide-gray-100">
         {menuItems.map(item => (
@@ -51,6 +55,7 @@ export default async function AccountPage() {
             className="flex items-center gap-4 px-5 py-4 bg-white active:bg-gray-50 transition-colors">
             <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-cc-blue"><item.Icon size={20} /></div>
             <span className={`flex-1 text-sm font-medium ${item.highlight ? 'text-cc-blue font-semibold' : 'text-cc-dark'}`}>{item.label}</span>
+            {item.badge && <span className="text-xs font-bold text-cc-blue bg-cc-blue-light px-2 py-1 rounded-full font-mono">{item.badge}</span>}
             <span className="text-gray-300 text-xl">&rsaquo;</span>
           </Link>
         ))}

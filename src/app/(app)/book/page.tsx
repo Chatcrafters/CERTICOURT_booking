@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { generateTimeSlots, formatEur, formatDateShort, formatDate } from '@/lib/helpers'
 import { useRouter } from 'next/navigation'
-import { IconCalendar, IconCourt, IconPin, IconCheck, IconRepeat } from '@/components/icons'
+import { IconCalendar, IconCourt, IconPin, IconCheck, IconRepeat, IconWallet } from '@/components/icons'
 import { format, addDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -25,6 +25,8 @@ export default function BookPage() {
   const [profile, setProfile] = useState<any>(null)
   const [recurring, setRecurring] = useState(false)
   const [recurringWeeks, setRecurringWeeks] = useState(4)
+  const [walletBalance, setWalletBalance] = useState(0)
+  const [payWithWallet, setPayWithWallet] = useState(false)
 
   const dates = Array.from({length: 7}, (_, i) => addDays(new Date(), i))
   const slots = generateTimeSlots('07:00', '23:00', 90)
@@ -41,6 +43,7 @@ export default function BookPage() {
       ])
       setCourts(c || []); setTarifas(t || []); setProfile(p)
       if (c?.length) setSelectedCourt(c[0])
+      fetch('/api/wallet').then(r => r.json()).then(d => setWalletBalance(d.balance || 0)).catch(() => {})
     }
     load()
   }, [])
@@ -85,6 +88,7 @@ export default function BookPage() {
         duration_min: 90,
         is_recurring: recurring,
         recurring_weeks: recurring ? recurringWeeks : undefined,
+        payment_method: payWithWallet ? 'wallet' : 'on_site',
       })
     })
 
@@ -299,8 +303,48 @@ export default function BookPage() {
             </div>
           </div>
 
+          {/* Wallet Payment */}
+          {(() => {
+            const total = calcPrice(selectedTarifa) * (recurring ? recurringWeeks : 1)
+            const canPayWallet = walletBalance >= total
+            return (
+              <div className={`rounded-xl p-4 border-2 ${payWithWallet ? 'border-cc-blue bg-cc-blue-light' : canPayWallet ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'}`}>
+                {canPayWallet ? (
+                  <button onClick={() => setPayWithWallet(!payWithWallet)} className="w-full text-left">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${payWithWallet ? 'bg-cc-blue text-white' : 'bg-gray-100 text-cc-blue'}`}>
+                        <IconWallet size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-bold text-cc-dark">Pagar con Wallet</div>
+                        <div className="text-xs text-gray-500">
+                          Saldo: {formatEur(walletBalance)} — {walletBalance - total >= 0 ? `quedan ${formatEur(walletBalance - total)}` : ''}
+                        </div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${payWithWallet ? 'border-cc-blue bg-cc-blue' : 'border-gray-300'}`}>
+                        {payWithWallet && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center">
+                      <IconWallet size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-400">Saldo insuficiente: {formatEur(walletBalance)}</div>
+                      <Link href="/account/wallet" className="text-xs text-cc-blue font-semibold">Recargar wallet</Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
           <button onClick={confirmBooking} disabled={loading} className="btn-primary">
-            {loading ? 'Procesando...' : `Pagar ${formatEur(calcPrice(selectedTarifa) * (recurring ? recurringWeeks : 1))} →`}
+            {loading ? 'Procesando...' : payWithWallet
+              ? `Pagar con Wallet ${formatEur(calcPrice(selectedTarifa) * (recurring ? recurringWeeks : 1))}`
+              : `Pagar ${formatEur(calcPrice(selectedTarifa) * (recurring ? recurringWeeks : 1))}`}
           </button>
         </>}
       </div>

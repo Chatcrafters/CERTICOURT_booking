@@ -102,3 +102,15 @@ export function IconClock({ size, ...p }: IconProps) {
 export function IconRepeat({ size, ...p }: IconProps) {
   return <svg {...defaults(size)} {...p}><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
 }
+
+export function IconWallet({ size, ...p }: IconProps) {
+  return <svg {...defaults(size)} {...p}><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/><circle cx="18" cy="15" r="1"/></svg>
+}
+
+export function IconGift({ size, ...p }: IconProps) {
+  return <svg {...defaults(size)} {...p}><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 12h18"/><path d="M12 8a4 4 0 00-4-4c-1.5 0-3 1.5-3 3s3 1 7 1"/><path d="M12 8a4 4 0 014-4c1.5 0 3 1.5 3 3s-3 1-7 1"/></svg>
+}
+
+export function IconRefund({ size, ...p }: IconProps) {
+  return <svg {...defaults(size)} {...p}><path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 010 8h-1"/></svg>
+}

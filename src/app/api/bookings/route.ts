@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { court_id, center_id, date, start_time, end_time, duration_min, pricing_rule_id, is_recurring, recurring_weeks } = body
+  const { court_id, center_id, date, start_time, end_time, duration_min, pricing_rule_id, is_recurring, recurring_weeks, payment_method } = body
 
   if (!court_id || !center_id || !date || !start_time || !end_time) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -79,6 +79,34 @@ export async function POST(req: NextRequest) {
 
   const discountAmount = basePrice * (discountPct / 100)
   const totalPrice = basePrice - discountAmount
+  const paymentMode = payment_method === 'wallet' ? 'online' : 'on_site'
+
+  // Handle wallet payment
+  if (payment_method === 'wallet') {
+    const weeks = is_recurring && recurring_weeks ? recurring_weeks : 1
+    const totalCharge = totalPrice * weeks
+    const { data: wallet } = await supabase.from('wallets')
+      .select('balance')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!wallet || wallet.balance < totalCharge) {
+      return NextResponse.json({ error: 'Insufficient wallet balance' }, { status: 400 })
+    }
+
+    const newBalance = wallet.balance - totalCharge
+    await supabase.from('wallets')
+      .update({ balance: newBalance, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id)
+
+    await supabase.from('wallet_transactions').insert({
+      user_id: user.id,
+      type: 'booking',
+      amount: -totalCharge,
+      description: `Reserva court`,
+      balance_after: newBalance,
+    })
+  }
 
   // Build booking dates
   const weeks = is_recurring && recurring_weeks ? recurring_weeks : 1
@@ -119,8 +147,8 @@ export async function POST(req: NextRequest) {
     end_time,
     duration_min: duration_min || 90,
     status: 'confirmed',
-    payment_status: 'pending',
-    payment_mode: 'on_site',
+    payment_status: payment_method === 'wallet' ? 'paid' : 'pending',
+    payment_mode: paymentMode,
     base_price: basePrice,
     discount_pct: discountPct,
     discount_amount: discountAmount,
