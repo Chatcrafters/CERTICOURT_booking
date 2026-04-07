@@ -22,19 +22,15 @@ export async function POST(req: NextRequest) {
     if (amount >= tier.min_amount) bonus = tier.bonus
   }
 
-  // Get current wallet
-  let { data: wallet } = await supabase.from('wallets')
-    .select('*')
+  // Auto-create wallet if it doesn't exist
+  await supabase.from('wallets')
+    .upsert({ user_id: user.id, balance: 0 }, { onConflict: 'user_id', ignoreDuplicates: true })
+
+  // Fetch current balance
+  const { data: wallet } = await supabase.from('wallets')
+    .select('balance')
     .eq('user_id', user.id)
     .single()
-
-  if (!wallet) {
-    const { data: newWallet } = await supabase.from('wallets')
-      .insert({ user_id: user.id, balance: 0 })
-      .select('*')
-      .single()
-    wallet = newWallet
-  }
 
   const currentBalance = wallet?.balance || 0
   const newBalance = currentBalance + amount + bonus

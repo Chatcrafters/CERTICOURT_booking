@@ -233,9 +233,9 @@ export default function BookPage() {
               <div className="font-bold text-cc-blue font-mono">{formatEur(calcPrice(tarifa))}</div>
             </button>
           ))}
-          {profile?.wallet_balance >= 0 && (
-            <div className="bg-green-50 rounded-xl p-3 text-sm text-green-700 flex items-center gap-1">
-              <IconCheck size={14} /> Monedero disponible: <strong>{formatEur(profile.wallet_balance)}</strong>
+          {walletBalance > 0 && (
+            <div className="bg-green-50 rounded-xl p-3 text-sm text-green-700 flex items-center gap-2">
+              <IconWallet size={14} /> Wallet: <strong>{formatEur(walletBalance)}</strong>
             </div>
           )}
           <button onClick={() => selectedTarifa && setStep(3)} className={`btn-primary ${!selectedTarifa ? 'opacity-50' : ''}`}>

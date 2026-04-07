@@ -6,21 +6,15 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Get or create wallet
-  let { data: wallet } = await supabase.from('wallets')
+  // Auto-create wallet if it doesn't exist
+  await supabase.from('wallets')
+    .upsert({ user_id: user.id, balance: 0 }, { onConflict: 'user_id', ignoreDuplicates: true })
+
+  const { data: wallet } = await supabase.from('wallets')
     .select('*')
     .eq('user_id', user.id)
     .single()
 
-  if (!wallet) {
-    const { data: newWallet } = await supabase.from('wallets')
-      .insert({ user_id: user.id, balance: 0 })
-      .select('*')
-      .single()
-    wallet = newWallet
-  }
-
-  // Get recent transactions
   const { data: transactions } = await supabase.from('wallet_transactions')
     .select('*')
     .eq('user_id', user.id)
