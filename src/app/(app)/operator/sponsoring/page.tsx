@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { formatEur, formatDateShort } from '@/lib/helpers'
 import { t, Lang } from '@/lib/i18n/translations'
 import { supabase } from '@/lib/supabase'
-import { IconMegaphone, IconCourt, IconWarning, IconCheck } from '@/components/icons'
+import { IconMegaphone, IconCourt, IconCheck, IconGear, IconWarning } from '@/components/icons'
 
 interface Sponsor {
   id: string; name: string; type: string; court_id: string | null
@@ -13,20 +13,25 @@ interface Sponsor {
   court: any
 }
 
+const emptyForm = { name: '', type: 'naming', court_id: '', annual_amount: '', contract_start: '', contract_end: '', notes: '' }
+
 export default function SponsoringPage() {
   const [lang, setLang] = useState<Lang>('es')
   const [sponsors, setSponsors] = useState<Sponsor[]>([])
   const [courts, setCourts] = useState<any[]>([])
   const [stats, setStats] = useState({ active: 0, totalAnnual: 0, expiring30: 0 })
   const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
-  const [form, setForm] = useState({ name: '', type: 'naming', court_id: '', annual_amount: '', contract_start: '', contract_end: '', notes: '' })
+  const [form, setForm] = useState(emptyForm)
+  const [toast, setToast] = useState('')
 
   const sp = t(lang).sponsorPage
-  const c = t(lang).common
+  const cm = t(lang).common
 
   useEffect(() => { loadData() }, [])
 
@@ -39,6 +44,11 @@ export default function SponsoringPage() {
     })
   }
 
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
   function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -46,40 +56,81 @@ export default function SponsoringPage() {
     setLogoPreview(URL.createObjectURL(file))
   }
 
+  function startEdit(s: Sponsor) {
+    setEditingId(s.id)
+    setForm({
+      name: s.name,
+      type: s.type,
+      court_id: s.court_id || '',
+      annual_amount: String(s.annual_amount),
+      contract_start: s.contract_start,
+      contract_end: s.contract_end,
+      notes: s.notes || '',
+    })
+    setLogoPreview(s.logo_url || null)
+    setLogoFile(null)
+    setShowForm(true)
+  }
+
+  function cancelForm() {
+    setShowForm(false)
+    setEditingId(null)
+    setForm(emptyForm)
+    setLogoFile(null)
+    setLogoPreview(null)
+  }
+
+  async function uploadLogo(sponsorId: string) {
+    if (!logoFile) return
+    const path = `${sponsorId}/${logoFile.name}`
+    await supabase.storage.from('sponsor-logos').upload(path, logoFile, { upsert: true })
+    const { data: urlData } = supabase.storage.from('sponsor-logos').getPublicUrl(path)
+    if (urlData?.publicUrl) {
+      await fetch('/api/operator/sponsoring', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: sponsorId, logo_url: urlData.publicUrl }),
+      })
+    }
+  }
+
   async function handleSubmit() {
     if (!form.name || !form.annual_amount || !form.contract_start || !form.contract_end) return
     setSaving(true)
 
-    const res = await fetch('/api/operator/sponsoring', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, annual_amount: Number(form.annual_amount) }),
-    })
-
-    if (res.ok) {
-      const sponsor = await res.json()
-
-      // Upload logo if selected
-      if (logoFile && sponsor.id) {
-        const path = `${sponsor.id}/${logoFile.name}`
-        await supabase.storage.from('sponsor-logos').upload(path, logoFile, { upsert: true })
-        const { data: urlData } = supabase.storage.from('sponsor-logos').getPublicUrl(path)
-        if (urlData?.publicUrl) {
-          await fetch('/api/operator/sponsoring', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: sponsor.id, logo_url: urlData.publicUrl }),
-          })
-        }
+    if (editingId) {
+      // Update existing
+      await fetch('/api/operator/sponsoring', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editingId, ...form, annual_amount: Number(form.annual_amount) }),
+      })
+      if (logoFile) await uploadLogo(editingId)
+      showToast(lang === 'de' ? 'Sponsor aktualisiert' : 'Sponsor actualizado')
+    } else {
+      // Create new
+      const res = await fetch('/api/operator/sponsoring', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, annual_amount: Number(form.annual_amount) }),
+      })
+      if (res.ok) {
+        const sponsor = await res.json()
+        if (logoFile && sponsor.id) await uploadLogo(sponsor.id)
+        showToast(lang === 'de' ? 'Sponsor hinzugefugt' : 'Sponsor anadido')
       }
-
-      setForm({ name: '', type: 'naming', court_id: '', annual_amount: '', contract_start: '', contract_end: '', notes: '' })
-      setLogoFile(null)
-      setLogoPreview(null)
-      setShowForm(false)
-      loadData()
     }
+
+    cancelForm()
+    loadData()
     setSaving(false)
+  }
+
+  async function handleDelete(id: string) {
+    await fetch(`/api/operator/sponsoring?id=${id}`, { method: 'DELETE' })
+    setDeletingId(null)
+    showToast(lang === 'de' ? 'Sponsor geloscht' : 'Sponsor eliminado')
+    loadData()
   }
 
   function daysLeft(dateStr: string) {
@@ -118,11 +169,10 @@ export default function SponsoringPage() {
 
       <div className="p-4 space-y-3">
         {loading ? (
-          <p className="text-center text-gray-400 text-sm py-8">{c.loading}</p>
+          <p className="text-center text-gray-400 text-sm py-8">{cm.loading}</p>
         ) : (
           <>
-            {/* Sponsor list */}
-            {sponsors.length === 0 ? (
+            {sponsors.length === 0 && !showForm ? (
               <div className="text-center py-12">
                 <div className="text-gray-300 flex justify-center mb-2"><IconMegaphone size={40} /></div>
                 <p className="text-sm text-gray-400">{sp.noSponsors}</p>
@@ -158,19 +208,50 @@ export default function SponsoringPage() {
                       {!isExpired && <div className="text-xs text-gray-400 mt-1">{days} {sp.daysLeft}</div>}
                     </div>
                   </div>
+                  {/* Edit / Delete buttons */}
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-50">
+                    <button onClick={() => startEdit(s)}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-semibold text-cc-blue bg-cc-blue-light hover:bg-blue-100 transition-colors">
+                      <IconGear size={12} /> {lang === 'de' ? 'Bearbeiten' : 'Editar'}
+                    </button>
+                    <button onClick={() => setDeletingId(s.id)}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-semibold text-red-500 bg-red-50 hover:bg-red-100 transition-colors">
+                      <IconWarning size={12} /> {cm.delete}
+                    </button>
+                  </div>
+                  {/* Delete confirmation */}
+                  {deletingId === s.id && (
+                    <div className="mt-2 bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-xs text-red-700 font-semibold mb-2">
+                        {lang === 'de' ? 'Sponsor loschen?' : 'Eliminar sponsor?'}
+                      </p>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleDelete(s.id)}
+                          className="flex-1 text-xs font-semibold text-white bg-red-500 rounded-lg py-1.5">
+                          {cm.delete}
+                        </button>
+                        <button onClick={() => setDeletingId(null)}
+                          className="flex-1 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg py-1.5">
+                          {cm.cancel}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })}
 
-            {/* Add sponsor */}
+            {/* Add / Edit form */}
             {!showForm ? (
-              <button onClick={() => setShowForm(true)}
+              <button onClick={() => { cancelForm(); setShowForm(true) }}
                 className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-xs font-semibold text-gray-500 hover:border-cc-blue hover:text-cc-blue transition-colors">
                 + {sp.addSponsor}
               </button>
             ) : (
               <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-                <h3 className="text-sm font-bold text-cc-dark">{sp.addSponsor}</h3>
+                <h3 className="text-sm font-bold text-cc-dark">
+                  {editingId ? (lang === 'de' ? 'Sponsor bearbeiten' : 'Editar sponsor') : sp.addSponsor}
+                </h3>
                 <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm" placeholder={sp.name} />
                 <div className="flex gap-2">
@@ -215,11 +296,11 @@ export default function SponsoringPage() {
                 <div className="flex gap-2">
                   <button onClick={handleSubmit} disabled={saving}
                     className="flex-1 bg-cc-blue text-white text-xs font-semibold py-2 rounded-lg disabled:opacity-50 active:scale-95 transition-transform">
-                    {saving ? '...' : c.save}
+                    {saving ? '...' : cm.save}
                   </button>
-                  <button onClick={() => setShowForm(false)}
+                  <button onClick={cancelForm}
                     className="flex-1 bg-white border border-gray-200 text-gray-600 text-xs font-semibold py-2 rounded-lg">
-                    {c.cancel}
+                    {cm.cancel}
                   </button>
                 </div>
               </div>
@@ -227,6 +308,13 @@ export default function SponsoringPage() {
           </>
         )}
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-24 left-4 right-4 max-w-md mx-auto bg-green-600 text-white text-sm font-semibold py-3 px-4 rounded-xl text-center flex items-center justify-center gap-2 z-50">
+          <IconCheck size={16} /> {toast}
+        </div>
+      )}
     </div>
   )
 }

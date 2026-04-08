@@ -65,9 +65,29 @@ export async function PATCH(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id, logo_url } = await req.json()
-  if (!id || !logo_url) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+  const body = await req.json()
+  const { id, ...updates } = body
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
-  await supabase.from('sponsors').update({ logo_url }).eq('id', id)
+  const allowed: Record<string, any> = {}
+  for (const key of ['name', 'type', 'court_id', 'annual_amount', 'contract_start', 'contract_end', 'notes', 'logo_url']) {
+    if (updates[key] !== undefined) allowed[key] = updates[key]
+  }
+
+  await supabase.from('sponsors').update(allowed).eq('id', id).eq('operator_id', user.id)
+  return NextResponse.json({ success: true })
+}
+
+export async function DELETE(req: NextRequest) {
+  const supabase = createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+  const { error } = await supabase.from('sponsors').delete().eq('id', id).eq('operator_id', user.id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
 }
