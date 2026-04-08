@@ -29,9 +29,10 @@ export default function BookPage() {
   const [walletBalance, setWalletBalance] = useState(0)
   const [payWithWallet, setPayWithWallet] = useState(false)
   const [courtSponsors, setCourtSponsors] = useState<Record<string, string>>({})
+  const [opSettings, setOpSettings] = useState({ max_advance_days: 30, min_advance_hours: 0, allow_recurring: true, max_booking_duration: 90 })
 
-  const dates = Array.from({length: 7}, (_, i) => addDays(new Date(), i))
-  const slots = generateTimeSlots('07:00', '23:00', 90)
+  const dates = Array.from({length: opSettings.max_advance_days}, (_, i) => addDays(new Date(), i))
+  const slots = generateTimeSlots('07:00', '23:00', opSettings.max_booking_duration || 90)
   const dateStr = format(selectedDate, 'yyyy-MM-dd')
 
   useEffect(() => {
@@ -49,7 +50,25 @@ export default function BookPage() {
         return numA - numB
       })
       setCourts(sortedCourts); setTarifas(t || []); setProfile(p)
-      if (c?.length) setSelectedCourt(c[0])
+      if (sortedCourts.length) {
+        setSelectedCourt(sortedCourts[0])
+        // Fetch operator settings for center
+        const centerId = sortedCourts[0].center_id
+        if (centerId) {
+          const { data: settings } = await supabase.from('operator_settings')
+            .select('max_advance_days, min_advance_hours, allow_recurring, max_booking_duration')
+            .eq('center_id', centerId)
+            .maybeSingle()
+          if (settings) {
+            setOpSettings({
+              max_advance_days: settings.max_advance_days ?? 30,
+              min_advance_hours: settings.min_advance_hours ?? 0,
+              allow_recurring: settings.allow_recurring ?? true,
+              max_booking_duration: settings.max_booking_duration ?? 90,
+            })
+          }
+        }
+      }
       fetch('/api/wallet').then(r => r.json()).then(d => setWalletBalance(d.balance || 0)).catch(() => {})
       // Fetch naming sponsors for courts
       const today = new Date().toISOString().split('T')[0]
@@ -72,6 +91,17 @@ export default function BookPage() {
   }, [selectedCourt, dateStr])
 
   const takenTimes = new Set(existingBookings.map(b => b.start_time?.slice(0,5)))
+
+  function isTooSoon(time: string) {
+    if (opSettings.min_advance_hours <= 0) return false
+    const isToday = dateStr === format(new Date(), 'yyyy-MM-dd')
+    if (!isToday) return false
+    const [h, m] = time.split(':').map(Number)
+    const slotTime = new Date()
+    slotTime.setHours(h, m, 0, 0)
+    const minTime = new Date(Date.now() + opSettings.min_advance_hours * 3600000)
+    return slotTime < minTime
+  }
 
   function isPeak(time: string) { return PEAK_HOURS.includes(time) }
 
@@ -197,7 +227,7 @@ export default function BookPage() {
           {/* Time grid */}
           <div className="grid grid-cols-3 gap-2">
             {slots.map(slot => {
-              const taken = takenTimes.has(slot)
+              const taken = takenTimes.has(slot) || isTooSoon(slot)
               const peak = isPeak(slot)
               const selected = selectedTime === slot
               return (
@@ -276,7 +306,7 @@ export default function BookPage() {
           </div>
 
           {/* Recurring toggle */}
-          <div className="bg-gray-50 rounded-xl p-4">
+          {opSettings.allow_recurring && <div className="bg-gray-50 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <IconRepeat size={16} className="text-cc-blue" />
@@ -305,7 +335,7 @@ export default function BookPage() {
                 </div>
               </div>
             )}
-          </div>
+          </div>}
 
           <div className="bg-gray-50 rounded-xl p-4">
             <h3 className="font-bold text-sm text-cc-dark mb-3">Pago</h3>
