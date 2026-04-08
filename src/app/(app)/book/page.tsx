@@ -43,7 +43,12 @@ export default function BookPage() {
         supabase.from('pricing_rules').select('*').eq('is_active', true),
         supabase.from('profiles').select('*').eq('id', user.id).single()
       ])
-      setCourts(c || []); setTarifas(t || []); setProfile(p)
+      const sortedCourts = (c || []).sort((a: any, b: any) => {
+        const numA = parseInt(a.name.replace(/\D/g, '')) || 0
+        const numB = parseInt(b.name.replace(/\D/g, '')) || 0
+        return numA - numB
+      })
+      setCourts(sortedCourts); setTarifas(t || []); setProfile(p)
       if (c?.length) setSelectedCourt(c[0])
       fetch('/api/wallet').then(r => r.json()).then(d => setWalletBalance(d.balance || 0)).catch(() => {})
       // Fetch naming sponsors for courts
