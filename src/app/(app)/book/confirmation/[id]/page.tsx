@@ -12,6 +12,18 @@ export default async function ConfirmationPage({ params }: { params: { id: strin
 
   if (!booking) return <div className="p-8 text-center text-gray-500">Reserva no encontrada</div>
 
+  // Fetch naming sponsor for this court
+  const today = new Date().toISOString().split('T')[0]
+  const { data: sponsor } = await supabase.from('sponsors')
+    .select('name, logo_url')
+    .eq('court_id', booking.court_id)
+    .eq('type', 'naming')
+    .eq('status', 'active')
+    .lte('contract_start', today)
+    .gte('contract_end', today)
+    .limit(1)
+    .single()
+
   const isCancelled = booking.status === 'cancelled'
 
   return (
@@ -40,6 +52,18 @@ export default async function ConfirmationPage({ params }: { params: { id: strin
           <p className="text-5xl font-bold font-mono tracking-widest">{booking.pin_code}</p>
           <p className="text-xs opacity-70 mt-2">Valido {booking.start_time?.slice(0,5)} - {booking.end_time?.slice(0,5)}</p>
           <p className="text-sm font-semibold mt-3">{booking.court?.display_name || booking.court?.name}</p>
+        </div>
+      )}
+
+      {sponsor && !isCancelled && (
+        <div className="w-full text-center mb-4">
+          <div className="h-px bg-gray-200 mb-3" />
+          <p className="text-xs text-gray-400 mb-2">Patrocinador oficial</p>
+          {sponsor.logo_url ? (
+            <img src={sponsor.logo_url} alt={sponsor.name} className="max-h-12 mx-auto" />
+          ) : (
+            <p className="text-sm text-gray-500 font-medium">{sponsor.name}</p>
+          )}
         </div>
       )}
 

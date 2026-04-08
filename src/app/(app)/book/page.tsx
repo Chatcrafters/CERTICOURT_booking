@@ -28,6 +28,7 @@ export default function BookPage() {
   const [recurringWeeks, setRecurringWeeks] = useState(4)
   const [walletBalance, setWalletBalance] = useState(0)
   const [payWithWallet, setPayWithWallet] = useState(false)
+  const [courtSponsors, setCourtSponsors] = useState<Record<string, string>>({})
 
   const dates = Array.from({length: 7}, (_, i) => addDays(new Date(), i))
   const slots = generateTimeSlots('07:00', '23:00', 90)
@@ -45,6 +46,14 @@ export default function BookPage() {
       setCourts(c || []); setTarifas(t || []); setProfile(p)
       if (c?.length) setSelectedCourt(c[0])
       fetch('/api/wallet').then(r => r.json()).then(d => setWalletBalance(d.balance || 0)).catch(() => {})
+      // Fetch naming sponsors for courts
+      const today = new Date().toISOString().split('T')[0]
+      const { data: sponsors } = await supabase.from('sponsors')
+        .select('court_id, name').eq('type', 'naming').eq('status', 'active')
+        .lte('contract_start', today).gte('contract_end', today)
+      const map: Record<string, string> = {}
+      for (const s of sponsors || []) { if (s.court_id) map[s.court_id] = s.name }
+      setCourtSponsors(map)
     }
     load()
   }, [])
@@ -140,7 +149,8 @@ export default function BookPage() {
                 <button key={c.id} onClick={() => setSelectedCourt(c)}
                   className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-colors
                     ${selectedCourt?.id === c.id ? 'border-cc-blue bg-cc-blue-light text-cc-blue' : 'border-gray-200 bg-white text-gray-600'}`}>
-                  {c.name}
+                  <div>{c.name}</div>
+                  {courtSponsors[c.id] && <div className="text-[10px] font-normal text-gray-400 mt-0.5">by {courtSponsors[c.id]}</div>}
                 </button>
               ))}
             </div>

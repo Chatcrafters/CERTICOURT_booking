@@ -59,3 +59,15 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(sponsor, { status: 201 })
 }
+
+export async function PATCH(req: NextRequest) {
+  const supabase = createSupabaseServer()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { id, logo_url } = await req.json()
+  if (!id || !logo_url) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+
+  await supabase.from('sponsors').update({ logo_url }).eq('id', id)
+  return NextResponse.json({ success: true })
+}

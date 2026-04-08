@@ -23,7 +23,7 @@ function isCancellable(date: string, startTime: string) {
   return (bookingStart.getTime() - now.getTime()) / (1000 * 60 * 60) >= 2
 }
 
-export default function BookingCard({ b, onCancelled }: { b: any; onCancelled?: (id: string) => void }) {
+export default function BookingCard({ b, onCancelled }: { b: any; onCancelled?: (id: string) => void; sponsorName?: string }) {
   const [cancelMode, setCancelMode] = useState<null | 'single' | 'series'>(null)
   const [cancelling, setCancelling] = useState(false)
   const [toast, setToast] = useState('')
@@ -54,7 +54,10 @@ export default function BookingCard({ b, onCancelled }: { b: any; onCancelled?: 
     <div className={`bg-white rounded-2xl p-4 border ${b.status === 'cancelled' ? 'border-red-200 opacity-75' : 'border-gray-100'}`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-sm">{b.court?.display_name || b.court?.name}</span>
+          <div>
+            <span className="font-bold text-sm">{b.court?.display_name || b.court?.name}</span>
+            {b.sponsor_name && <div className="text-xs text-gray-400">Sponsored by {b.sponsor_name}</div>}
+          </div>
           {b.is_recurring && (
             <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-cc-blue bg-cc-blue-light px-1.5 py-0.5 rounded-full">
               <IconRepeat size={10} /> Semanal
