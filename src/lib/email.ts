@@ -13,7 +13,19 @@ export async function sendBookingEmail(params: {
   centerName: string
   totalPrice: number
   pin: string
+  sponsorName?: string
+  sponsorLogoUrl?: string
 }) {
+  const sponsorHtml = params.sponsorName
+    ? `<div style="text-align:center; margin-top:16px; padding-top:16px; border-top:1px solid #eee;">
+        <p style="color:#888; font-size:12px; margin:0 0 8px;">Patrocinador oficial</p>
+        ${params.sponsorLogoUrl
+          ? `<img src="${params.sponsorLogoUrl}" alt="${params.sponsorName}" style="max-height:40px; max-width:100px;" />`
+          : `<p style="color:#666; font-size:14px; margin:0;">${params.sponsorName}</p>`
+        }
+      </div>`
+    : ''
+
   const html = `
     <h2>CERTICOURT - Reserva confirmada</h2>
     <p><strong>Court:</strong> ${params.courtName}</p>
@@ -23,6 +35,7 @@ export async function sendBookingEmail(params: {
     <p><strong>Precio:</strong> ${params.totalPrice.toFixed(2)} EUR</p>
     <h1 style="color:#1E54D0;letter-spacing:8px">${params.pin}</h1>
     <p>Presenta este PIN en la puerta del court.</p>
+    ${sponsorHtml}
   `
   await fetch('https://api.resend.com/emails', {
     method: 'POST',

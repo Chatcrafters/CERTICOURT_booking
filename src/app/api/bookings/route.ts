@@ -212,6 +212,17 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Fetch naming sponsor for email
+  const emailToday = new Date().toISOString().split('T')[0]
+  const { data: sponsor } = await supabase.from('sponsors')
+    .select('name, logo_url')
+    .eq('court_id', court_id)
+    .eq('type', 'naming')
+    .eq('status', 'active')
+    .lte('contract_start', emailToday)
+    .gte('contract_end', emailToday)
+    .maybeSingle()
+
   // Send email confirmation
   if (user.email && process.env.RESEND_API_KEY) {
     try {
@@ -224,6 +235,8 @@ export async function POST(req: NextRequest) {
         endTime: booking.end_time.slice(0, 5),
         centerName,
         totalPrice: totalPrice * weeks,
+        sponsorName: sponsor?.name,
+        sponsorLogoUrl: sponsor?.logo_url,
       })
       console.log('=== EMAIL SENT ===', user.email)
     } catch (err) {

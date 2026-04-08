@@ -262,13 +262,25 @@ export default function SponsoringPage() {
                     </button>
                   ))}
                 </div>
-                {form.type === 'naming' && (
-                  <select value={form.court_id} onChange={e => setForm(f => ({ ...f, court_id: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm">
-                    <option value="">{sp.courtSelect}</option>
-                    {courts.map(ct => <option key={ct.id} value={ct.id}>{ct.display_name || ct.name}</option>)}
-                  </select>
-                )}
+                {form.type === 'naming' && (() => {
+                  const takenCourtIds = new Set(
+                    sponsors.filter(s => s.type === 'naming' && s.status === 'active' && s.id !== editingId).map(s => s.court_id)
+                  )
+                  return (
+                    <select value={form.court_id} onChange={e => setForm(f => ({ ...f, court_id: e.target.value }))}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm">
+                      <option value="">{sp.courtSelect}</option>
+                      {courts.map(ct => {
+                        const taken = takenCourtIds.has(ct.id)
+                        return (
+                          <option key={ct.id} value={ct.id} disabled={taken}>
+                            {ct.display_name || ct.name}{taken ? ` — ${lang === 'de' ? 'belegt' : 'ocupado'}` : ''}
+                          </option>
+                        )
+                      })}
+                    </select>
+                  )
+                })()}
                 <input type="number" value={form.annual_amount} onChange={e => setForm(f => ({ ...f, annual_amount: e.target.value }))}
                   className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm" placeholder={`${sp.annualAmount} (EUR)`} />
                 <div className="grid grid-cols-2 gap-2">

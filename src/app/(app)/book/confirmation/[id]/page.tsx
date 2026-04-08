@@ -15,14 +15,15 @@ export default async function ConfirmationPage({ params }: { params: { id: strin
   // Fetch naming sponsor for this court
   const today = new Date().toISOString().split('T')[0]
   const { data: sponsor } = await supabase.from('sponsors')
-    .select('name, logo_url')
+    .select('name, logo_url, type')
     .eq('court_id', booking.court_id)
     .eq('type', 'naming')
     .eq('status', 'active')
     .lte('contract_start', today)
     .gte('contract_end', today)
-    .limit(1)
-    .single()
+    .maybeSingle()
+
+  console.log('sponsor:', sponsor)
 
   const isCancelled = booking.status === 'cancelled'
 
@@ -60,7 +61,7 @@ export default async function ConfirmationPage({ params }: { params: { id: strin
           <div className="h-px bg-gray-200 mb-3" />
           <p className="text-xs text-gray-400 mb-2">Patrocinador oficial</p>
           {sponsor.logo_url ? (
-            <img src={sponsor.logo_url} alt={sponsor.name} className="max-h-12 mx-auto" />
+            <img src={sponsor.logo_url} alt={sponsor.name} style={{ maxHeight: '48px', maxWidth: '120px' }} className="mx-auto" />
           ) : (
             <p className="text-sm text-gray-500 font-medium">{sponsor.name}</p>
           )}
