@@ -218,8 +218,19 @@ export default function BookPage() {
                 </div>
                 <div className="text-xs text-gray-500">1 tramo seleccionado</div>
               </div>
-              <button onClick={() => setStep(2)} className="bg-cc-blue text-white font-bold px-4 py-2 rounded-xl text-sm">
-                Reservar →
+              <button onClick={() => {
+                const available = tarifas.filter((tf: any) => !tf.is_peak)
+                if (available.length === 1) {
+                  setSelectedTarifa(available[0])
+                  setStep(3)
+                } else if (available.length === 0) {
+                  setSelectedTarifa({ id: 'default', discount_pct: 0 })
+                  setStep(3)
+                } else {
+                  setStep(2)
+                }
+              }} className="bg-cc-blue text-white font-bold px-4 py-2 rounded-xl text-sm">
+                Reservar &rarr;
               </button>
             </div>
           )}
@@ -258,35 +269,43 @@ export default function BookPage() {
           </p>
         </>}
 
-        {/* STEP 2 */}
-        {step === 2 && <>
-          <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600 flex items-center gap-2">
-            <IconCalendar size={14} /> {formatDateShort(dateStr)} &middot; {selectedTime} &middot; <IconCourt size={14} /> {selectedCourt?.display_name || selectedCourt?.name}
-          </div>
-          {tarifas.filter(t => !t.is_peak).map(tarifa => (
-            <button key={tarifa.id} onClick={() => setSelectedTarifa(tarifa)}
-              className={`w-full text-left p-4 rounded-2xl border-2 flex items-center gap-3 transition-all
-                ${selectedTarifa?.id === tarifa.id ? 'border-cc-blue bg-cc-blue-light' : 'border-gray-200 bg-white'}`}>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0
-                ${selectedTarifa?.id === tarifa.id ? 'border-cc-blue bg-cc-blue' : 'border-gray-300'}`}>
-                {selectedTarifa?.id === tarifa.id && <div className="w-2 h-2 rounded-full bg-white"/>}
+        {/* STEP 2 - Tariff selection (only shown when multiple tariffs) */}
+        {step === 2 && (() => {
+          const available = tarifas.filter((tf: any) => !tf.is_peak)
+          return <>
+            <div className="bg-white rounded-2xl border border-gray-100 p-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                <IconCourt size={14} className="text-cc-blue" />
+                <span className="font-semibold">{selectedCourt?.name}</span>
+                <span className="text-gray-300">&middot;</span>
+                <span>{formatDateShort(dateStr)}</span>
+                <span className="text-gray-300">&middot;</span>
+                <span>{selectedTime}</span>
               </div>
-              <div className="flex-1">
-                <div className="font-bold text-sm">{tarifa.name_es || tarifa.name}</div>
-                <div className="text-xs text-gray-500">{tarifa.discount_pct ? `−${tarifa.discount_pct}% descuento` : 'Sin descuento'}{tarifa.requires_trainer ? ' · Requiere entrenador' : ''}</div>
+              <div className="space-y-2">
+                {available.map(tarifa => (
+                  <button key={tarifa.id} onClick={() => setSelectedTarifa(tarifa)}
+                    className={`w-full text-left p-3 rounded-xl border-2 flex items-center justify-between transition-all
+                      ${selectedTarifa?.id === tarifa.id ? 'border-cc-blue bg-cc-blue-light' : 'border-gray-200 bg-white'}`}>
+                    <div>
+                      <div className="font-semibold text-sm">{tarifa.name_es || tarifa.name}</div>
+                      {tarifa.discount_pct > 0 && <div className="text-xs text-green-600">-{tarifa.discount_pct}%</div>}
+                    </div>
+                    <div className="font-bold text-cc-blue font-mono">{formatEur(calcPrice(tarifa))}</div>
+                  </button>
+                ))}
               </div>
-              <div className="font-bold text-cc-blue font-mono">{formatEur(calcPrice(tarifa))}</div>
-            </button>
-          ))}
-          {walletBalance > 0 && (
-            <div className="bg-green-50 rounded-xl p-3 text-sm text-green-700 flex items-center gap-2">
-              <IconWallet size={14} /> Wallet: <strong>{formatEur(walletBalance)}</strong>
             </div>
-          )}
-          <button onClick={() => selectedTarifa && setStep(3)} className={`btn-primary ${!selectedTarifa ? 'opacity-50' : ''}`}>
-            Siguiente →
-          </button>
-        </>}
+            {walletBalance > 0 && (
+              <div className="bg-green-50 rounded-xl p-3 text-sm text-green-700 flex items-center gap-2">
+                <IconWallet size={14} /> Wallet: <strong>{formatEur(walletBalance)}</strong>
+              </div>
+            )}
+            <button onClick={() => selectedTarifa && setStep(3)} className={`btn-primary ${!selectedTarifa ? 'opacity-50' : ''}`}>
+              Siguiente &rarr;
+            </button>
+          </>
+        })()}
 
         {/* STEP 3 */}
         {step === 3 && <>
