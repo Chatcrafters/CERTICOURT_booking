@@ -21,9 +21,9 @@ export default async function OperatorPage() {
   const expiring = contracts?.filter(c => daysUntil(c.ends_at) <= 90) || []
 
   const quickActions = [
-    { href: '#', Icon: IconClipboard, label: 'Courts', sub: `${courts?.length || 0} pistas` },
-    { href: '#', Icon: IconUsers, label: 'Miembros', sub: 'Gestionar' },
-    { href: '#', Icon: IconMoney, label: 'Ingresos', sub: 'Ver informe' },
+    { href: '/operator/courts', Icon: IconClipboard, label: 'Courts', sub: `${courts?.length || 0} pistas` },
+    { href: '/operator/usuarios', Icon: IconUsers, label: 'Usuarios', sub: 'Gestionar' },
+    { href: '/operator/ingresos', Icon: IconMoney, label: 'Ingresos', sub: 'Ver informe' },
     { href: '/operator/sponsoring', Icon: IconMegaphone, label: 'Sponsoring', sub: `${contracts?.length || 0} contratos` },
   ]
 
