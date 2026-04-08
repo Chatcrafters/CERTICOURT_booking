@@ -55,8 +55,10 @@ export default function BookingCard({ b, onCancelled }: { b: any; onCancelled?: 
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div>
-            <span className="font-bold text-sm">{b.court?.display_name || b.court?.name}</span>
-            {b.sponsor_name && <div className="text-xs text-gray-400">Sponsored by {b.sponsor_name}</div>}
+            <span className="font-bold text-sm">
+              {b.court?.name || b.court?.display_name}
+              {b.sponsor_name && <span className="text-gray-400 font-normal"> — {b.sponsor_name}</span>}
+            </span>
           </div>
           {b.is_recurring && (
             <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-cc-blue bg-cc-blue-light px-1.5 py-0.5 rounded-full">

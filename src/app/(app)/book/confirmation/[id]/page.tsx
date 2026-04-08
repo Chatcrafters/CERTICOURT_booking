@@ -52,7 +52,10 @@ export default async function ConfirmationPage({ params }: { params: { id: strin
           <p className="text-xs uppercase tracking-widest opacity-75 mb-2">Tu PIN de acceso</p>
           <p className="text-5xl font-bold font-mono tracking-widest">{booking.pin_code}</p>
           <p className="text-xs opacity-70 mt-2">Valido {booking.start_time?.slice(0,5)} - {booking.end_time?.slice(0,5)}</p>
-          <p className="text-sm font-semibold mt-3">{booking.court?.display_name || booking.court?.name}</p>
+          <p className="text-sm font-semibold mt-3">
+            {booking.court?.name || booking.court?.display_name}
+            {sponsor && <span className="font-normal opacity-70"> — {sponsor.name}</span>}
+          </p>
         </div>
       )}
 

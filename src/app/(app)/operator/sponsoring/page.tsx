@@ -263,18 +263,21 @@ export default function SponsoringPage() {
                   ))}
                 </div>
                 {form.type === 'naming' && (() => {
-                  const takenCourtIds = new Set(
-                    sponsors.filter(s => s.type === 'naming' && s.status === 'active' && s.id !== editingId).map(s => s.court_id)
-                  )
+                  const courtSponsorMap = new Map<string, string>()
+                  for (const s of sponsors) {
+                    if (s.type === 'naming' && s.status === 'active' && s.court_id && s.id !== editingId) {
+                      courtSponsorMap.set(s.court_id, s.name)
+                    }
+                  }
                   return (
                     <select value={form.court_id} onChange={e => setForm(f => ({ ...f, court_id: e.target.value }))}
                       className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm">
                       <option value="">{sp.courtSelect}</option>
                       {courts.map(ct => {
-                        const taken = takenCourtIds.has(ct.id)
+                        const sponsorName = courtSponsorMap.get(ct.id)
                         return (
-                          <option key={ct.id} value={ct.id} disabled={taken}>
-                            {ct.display_name || ct.name}{taken ? ` — ${lang === 'de' ? 'belegt' : 'ocupado'}` : ''}
+                          <option key={ct.id} value={ct.id} disabled={!!sponsorName}>
+                            {ct.display_name || ct.name}{sponsorName ? ` — ${sponsorName}` : ''}
                           </option>
                         )
                       })}
